@@ -33,8 +33,9 @@ class ReadingResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('value')
                     ->label(trans('reading.value'))
+                    ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
                     ->numeric()
-                    ->step(.5),
+                    ->step(.1),
                 Forms\Components\DatePicker::make('date')
                     ->label(trans('reading.date'))
                     ->default(today()),

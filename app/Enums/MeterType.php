@@ -13,9 +13,9 @@ enum MeterType: string implements HasLabel
     public function getLabel(): ?string
     {
         return match ($this) {
-            MeterType::Electricity => trans('meters.electricity'),
-            MeterType::Gas => trans('meters.gas'),
-            MeterType::Water => trans('meters.water'),
+            MeterType::Electricity => trans('meter.electricity'),
+            MeterType::Gas => trans('meter.gas'),
+            MeterType::Water => trans('meter.water'),
         };
     }
 

@@ -45,11 +45,11 @@ echo "⬇️ Laravel down"
 
     echo "📦 Installing Npm dependencies"
 
-    npm ci
+    #npm ci
 
     echo "🏗️ Compiling assets"
 
-    npm run build
+    #npm run build
 
 echo "⬆️ Rising Laravel"
 php artisan up

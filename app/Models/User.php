@@ -13,10 +13,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
+use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
+use Staudenmeir\EloquentJsonRelations\Relations\HasManyJson;
 
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, HasJsonRelationships, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -61,11 +63,16 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->meters->contains($tenant);
+        return $this->meters->contains($tenant) || $this->sharedMeters->contains($tenant);
     }
 
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->meters;
+        return $this->meters->merge($this->sharedMeters);
+    }
+
+    public function sharedMeters(): HasManyJson
+    {
+        return $this->hasManyJson(Meter::class, 'shared_users');
     }
 }

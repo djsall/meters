@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\EditMeter;
 use App\Filament\Pages\RegisterMeter;
 use App\Models\Meter;
 use Filament\Http\Middleware\Authenticate;
@@ -35,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->tenant(Meter::class)
             ->tenantRegistration(RegisterMeter::class)
+            ->tenantProfile(EditMeter::class)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

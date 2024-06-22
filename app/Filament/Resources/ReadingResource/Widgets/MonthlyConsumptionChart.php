@@ -49,7 +49,7 @@ class MonthlyConsumptionChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => trans('charts.monthly_consumption.heading'),
+                    'label' => trans('charts.monthly_consumption.label'),
                     'data' => $data
                         ->map(static function (TrendValue $value) use ($first, $previous): ?int {
                             if ($value->aggregate > 0) {

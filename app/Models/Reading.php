@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MeasurmentUnit;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -30,8 +31,8 @@ class Reading extends Model
         return $this->meter->type->getUnit();
     }
 
-    public static function getLatestValue(): ?int
+    public function scopeTenant(Builder $query): void
     {
-        return Reading::whereBelongsTo(Filament::getTenant(), 'meter')->orderByDesc('date')->first()?->value;
+        $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 }

@@ -13,8 +13,8 @@ class AverageConsumption extends BaseWidget
     {
         $label = trans('reading.average_consumption');
         $tenant = Filament::getTenant();
-        $first = Reading::whereBelongsTo($tenant, 'meter')->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderBy('date')->first();
-        $last = Reading::whereBelongsTo($tenant, 'meter')->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderByDesc('date')->first();
+        $first = Reading::tenant()->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderBy('date')->first();
+        $last = Reading::tenant()->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderByDesc('date')->first();
 
         $value = '-';
 

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReadingResource\Pages;
-use App\Filament\Resources\ReadingResource\Widgets\AverageConsumption;
+use App\Filament\Resources\ReadingResource\Widgets;
 use App\Models\Reading;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -46,7 +46,8 @@ class ReadingResource extends Resource
     public static function getWidgets(): array
     {
         return [
-            AverageConsumption::class,
+            Widgets\AverageConsumption::class,
+            Widgets\MonthlyConsumptionChart::class,
         ];
     }
 

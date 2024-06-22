@@ -19,7 +19,7 @@ class AverageConsumption extends BaseWidget
         $value = '-';
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
-            $value = ($last->value - $first->value) / ($first->date->diffInMonths($last->date));
+            $value = ($last->value - $first->value) / ($first->date->startOfMonth()->diffInMonths($last->date->endOfMonth()));
             $value = number_format($value, thousands_separator: ' ');
         }
 

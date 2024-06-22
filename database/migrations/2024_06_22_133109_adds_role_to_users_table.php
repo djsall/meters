@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('role')->nullable()->default('user')->after('password');
         });
 
-        User::firstWhere(['email' => 'proksalevente@gmail.com'])->updateQuietly(['role' => 'admin']);
+        User::firstWhere('email', 'proksalevente@gmail.com')->updateQuietly(['role' => 'admin']);
     }
 
     /**

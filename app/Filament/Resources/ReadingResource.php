@@ -56,10 +56,11 @@ class ReadingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('value')
+                    ->numeric(thousandsSeparator: ' ')
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->label(trans('reading.value')),
                 Tables\Columns\TextColumn::make('date')
-                    ->date()
+                    ->date(format: 'Y-m-d')
                     ->label(trans('reading.date')),
             ])
             ->defaultPaginationPageOption(25)

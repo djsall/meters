@@ -22,24 +22,17 @@ class MonthlyConsumptionChart extends ChartWidget
 
     protected function getData(): array
     {
-        $first = Reading::query()
-            ->tenant()
-            ->whereBetween('date', [
-                today()->startOfYear(),
-                today()->endOfYear(),
-            ])
-            ->orderBy('date')
-            ->first()
-            ->value;
+        $first = Reading::firstOfYear()?->value;
 
-        $previous = fn ($date): int => Reading::query()
-            ->tenant()
-            ->whereBetween('date', [
-                Carbon::parse($date)->subMonth()->startOfMonth(),
-                Carbon::parse($date)->subMonth()->endOfMonth(),
-            ])
-            ->first()
-            ?->value ?? 0;
+        $previous =
+            static fn ($date): int => Reading::query()
+                ->tenant()
+                ->whereBetween('date', [
+                    Carbon::parse($date)->subMonth()->startOfMonth(),
+                    Carbon::parse($date)->subMonth()->endOfMonth(),
+                ])
+                ->first()
+                ?->value ?? 0;
 
         $data =
             Trend::query(
@@ -53,29 +46,27 @@ class MonthlyConsumptionChart extends ChartWidget
                 ->perMonth()
                 ->average('value');
 
-        $mapped_data = $data
-            ->map(function (TrendValue $value) use ($first, $previous): ?int {
-                if ($value->aggregate > 0) {
-                    $previous = $previous($value->date);
-
-                    if ($previous === 0) {
-                        return $value->aggregate - $first;
-                    }
-
-                    return $value->aggregate - $previous;
-                }
-
-                return null;
-            });
-
         return [
             'datasets' => [
                 [
                     'label' => trans('charts.monthly_consumption.heading'),
-                    'data' => $mapped_data,
+                    'data' => $data
+                        ->map(static function (TrendValue $value) use ($first, $previous): ?int {
+                            if ($value->aggregate > 0) {
+                                $previous = $previous($value->date);
+
+                                if ($previous === 0) {
+                                    return $value->aggregate - $first;
+                                }
+
+                                return $value->aggregate - $previous;
+                            }
+
+                            return null;
+                        }),
                 ],
             ],
-            'labels' => $data->map(fn (TrendValue $value) => $value->date),
+            'labels' => $data->map(static fn (TrendValue $value) => $value->date),
         ];
     }
 

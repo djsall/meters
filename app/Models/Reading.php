@@ -35,4 +35,28 @@ class Reading extends Model
     {
         $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
+
+    public static function firstOfYear(): self
+    {
+        return self::query()
+            ->tenant()
+            ->whereBetween('date', [
+                today()->startOfYear(),
+                today()->endOfYear(),
+            ])
+            ->orderBy('date')
+            ->first();
+    }
+
+    public static function lastOfYear(): self
+    {
+        return self::query()
+            ->tenant()
+            ->whereBetween('date', [
+                today()->startOfYear(),
+                today()->endOfYear(),
+            ])
+            ->orderByDesc('date')
+            ->first();
+    }
 }

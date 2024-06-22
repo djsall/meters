@@ -13,12 +13,12 @@ class AverageConsumption extends BaseWidget
     {
         $label = trans('reading.average_consumption');
         $tenant = Filament::getTenant();
-        $first = Reading::tenant()->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderBy('date')->first();
-        $last = Reading::tenant()->whereBetween('date', [today()->startOfYear(), today()->endOfYear()])->orderByDesc('date')->first();
+        $first = Reading::firstOfYear();
+        $last = Reading::lastOfYear();
 
         $value = '-';
 
-        if ($first && $last && $last->date->notEqualTo($first->date)) {
+        if (filled($first) && filled($last) && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / ($first->date->startOfMonth()->diffInMonths($last->date->endOfMonth()) + 1);
             $value = number_format($value, thousands_separator: ' ');
         }

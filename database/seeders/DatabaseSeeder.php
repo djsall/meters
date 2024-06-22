@@ -26,13 +26,15 @@ class DatabaseSeeder extends Seeder
 
         Meter::factory(10)->create();
 
-        foreach (Meter::inRandomOrder()->get() as $meter) {
+        foreach (Meter::all() as $meter) {
             for ($i = 0; $i < 12; $i++) {
+                $date = Reading::query()
+                    ->where('meter_id', $meter->id)
+                    ->orderByDesc('date')
+                    ->first()?->date->addMonth();
+
                 $meter->readings()->create([
-                    'date' => Reading::query()
-                        ->where('meter_id', $meter->id)
-                        ->orderByDesc('date')
-                        ->first()?->date->addMonth() ?? today()->startOfYear(),
+                    'date' => $date ?? today()->startOfYear(),
                     'value' => Reading::factory()->make()->value,
                 ]);
             }

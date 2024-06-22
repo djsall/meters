@@ -18,7 +18,7 @@ class AverageConsumption extends BaseWidget
 
         $value = '-';
 
-        if ($last->date->notEqualTo($first->date)) {
+        if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / (today()->startOfYear()->diffInMonths($last->date->startOfMonth()));
             $value = number_format($value, thousands_separator: ' ');
         }

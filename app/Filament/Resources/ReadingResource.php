@@ -35,7 +35,6 @@ class ReadingResource extends Resource
                 Forms\Components\TextInput::make('value')
                     ->label(trans('reading.value'))
                     ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
-                    ->minValue(fn () => Reading::getLatestValue() + 1)
                     ->numeric(),
                 Forms\Components\DatePicker::make('date')
                     ->label(trans('reading.date'))

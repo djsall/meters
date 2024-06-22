@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MeterType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,7 @@ use Staudenmeir\EloquentJsonRelations\Relations\BelongsToJson;
 
 class Meter extends Model
 {
-    use HasJsonRelationships, HasUuids;
+    use HasFactory, HasJsonRelationships, HasUuids;
 
     protected $fillable = [
         'user_id', 'type', 'name', 'description', 'settings', 'shared_users',

@@ -6,12 +6,13 @@ use App\Enums\MeasurmentUnit;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Reading extends Model
 {
-    use HasUuids;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'meter_id', 'value', 'date',
@@ -36,14 +37,19 @@ class Reading extends Model
         $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 
-    public static function firstOfYear(): ?self
+    public function scopeCurrentYear(Builder $query): void
     {
-        return self::query()
-            ->tenant()
+        $query
             ->whereBetween('date', [
                 today()->startOfYear(),
                 today()->endOfYear(),
-            ])
+            ]);
+    }
+
+    public static function firstOfYear(): ?self
+    {
+        return self::query()
+            ->currentYear()
             ->orderBy('date')
             ->first();
     }
@@ -51,11 +57,7 @@ class Reading extends Model
     public static function lastOfYear(): ?self
     {
         return self::query()
-            ->tenant()
-            ->whereBetween('date', [
-                today()->startOfYear(),
-                today()->endOfYear(),
-            ])
+            ->currentYear()
             ->orderByDesc('date')
             ->first();
     }

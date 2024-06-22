@@ -58,10 +58,12 @@ class ReadingResource extends Resource
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(thousandsSeparator: ' ')
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
-                    ->label(trans('reading.value')),
+                    ->label(trans('reading.value'))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('date')
                     ->date(format: 'Y-m-d')
-                    ->label(trans('reading.date')),
+                    ->label(trans('reading.date'))
+                    ->sortable(),
             ])
             ->defaultPaginationPageOption(25)
             ->filters([
@@ -73,6 +75,7 @@ class ReadingResource extends Resource
                         Tables\Actions\DeleteAction::make(),
                     ]),
             ])
+            ->defaultSort('date')
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

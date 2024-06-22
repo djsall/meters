@@ -36,7 +36,7 @@ class Reading extends Model
         $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 
-    public static function firstOfYear(): self
+    public static function firstOfYear(): ?self
     {
         return self::query()
             ->tenant()
@@ -48,7 +48,7 @@ class Reading extends Model
             ->first();
     }
 
-    public static function lastOfYear(): self
+    public static function lastOfYear(): ?self
     {
         return self::query()
             ->tenant()

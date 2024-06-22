@@ -49,6 +49,7 @@ class Reading extends Model
     public static function firstOfYear(): ?self
     {
         return self::query()
+            ->tenant()
             ->currentYear()
             ->orderBy('date')
             ->first();
@@ -57,6 +58,7 @@ class Reading extends Model
     public static function lastOfYear(): ?self
     {
         return self::query()
+            ->tenant()
             ->currentYear()
             ->orderByDesc('date')
             ->first();

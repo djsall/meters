@@ -5,5 +5,5 @@ return [
     'pluralLabel' => 'readings',
     'value' => 'Value',
     'date' => 'Date',
-    'average_consumption' => 'Average consumption this year',
+    'average_consumption' => 'Average montly consumption this year',
 ];

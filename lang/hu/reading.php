@@ -5,5 +5,5 @@ return [
     'pluralLabel' => 'óraállások',
     'value' => 'Érték',
     'date' => 'Dátum',
-    'average_consumption' => 'Átlagos fogyasztás idén',
+    'average_consumption' => 'Átlagos havi fogyasztás idén',
 ];

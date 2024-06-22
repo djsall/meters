@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReadingResource\Pages;
+use App\Filament\Resources\ReadingResource\Widgets\AverageConsumption;
 use App\Models\Reading;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -34,8 +35,8 @@ class ReadingResource extends Resource
                 Forms\Components\TextInput::make('value')
                     ->label(trans('reading.value'))
                     ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
-                    ->numeric()
-                    ->step(.1),
+                    ->minValue(fn () => Reading::getLatestValue() + 1)
+                    ->numeric(),
                 Forms\Components\DatePicker::make('date')
                     ->label(trans('reading.date'))
                     ->default(today()),
@@ -43,12 +44,19 @@ class ReadingResource extends Resource
             ->columns(1);
     }
 
+    public static function getWidgets(): array
+    {
+        return [
+            AverageConsumption::class,
+        ];
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('value')
-                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' ')->toString())
+                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->label(trans('reading.value')),
                 Tables\Columns\TextColumn::make('date')
                     ->date()

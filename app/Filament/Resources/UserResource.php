@@ -21,12 +21,12 @@ class UserResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return __('user.label');
+        return trans('user.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('user.plural_label');
+        return trans('user.plural_label');
     }
 
     public static function canAccess(): bool
@@ -51,12 +51,12 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\Select::make('role')
-                    ->label(static fn () => __('user.role'))
+                    ->label(static fn () => trans('user.role'))
                     ->required()
                     ->default('user')
                     ->options([
-                        'user' => __('user.user'),
-                        'admin' => __('user.admin'),
+                        'user' => ucfirst(trans('user.label')),
+                        'admin' => trans('user.admin'),
                     ]),
             ]);
     }
@@ -70,7 +70,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('role')
-                    ->label(static fn () => __('user.role'))
+                    ->label(static fn () => trans('user.role'))
                     ->badge(),
                 Tables\Columns\TextColumn::make('email_verified_at')
                     ->dateTime()

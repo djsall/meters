@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class Reading extends Model
 {
@@ -28,10 +27,8 @@ class Reading extends Model
         return Attribute::get(
             fn (): ?Reading => self::query()
                 ->tenant()
-                ->whereBetween('date', [
-                    Carbon::parse($this->date)->subMonth()->startOfMonth(),
-                    Carbon::parse($this->date)->subMonth()->endOfMonth(),
-                ])
+                ->latest('date')
+                ->whereDate('date', '<', $this->date)
                 ->first()
         );
     }

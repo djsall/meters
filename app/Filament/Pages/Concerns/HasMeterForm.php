@@ -13,16 +13,16 @@ trait HasMeterForm
     {
         return [
             Select::make('type')
-                ->label(trans('meter.type'))
+                ->label(__('meter.type'))
                 ->required()
                 ->options(MeterType::class),
             Forms\Components\TextInput::make('name')
-                ->label(trans('meter.name'))
+                ->label(__('meter.name'))
                 ->required(),
             Forms\Components\Textarea::make('description')
-                ->label(trans('meter.description')),
+                ->label(__('meter.description')),
             Forms\Components\Select::make('shared_users')
-                ->label(trans('meter.shared_with'))
+                ->label(__('meter.shared_with'))
                 ->options(static fn () => User::all()->except(auth()->user()->id)->pluck('email', 'id'))
                 ->multiple()
                 ->searchable()

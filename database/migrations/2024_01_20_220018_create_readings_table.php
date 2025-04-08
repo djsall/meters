@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('readings', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('meter_id')->constrained();
+            $table->foreignUuid('meter_id')->constrained()->cascadeOnDelete();
             $table->double('value');
             $table->dateTime('date')->nullable();
             $table->timestamps();

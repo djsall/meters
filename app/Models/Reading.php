@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Enums\MeasurmentUnit;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class Reading extends Model
 {
@@ -21,14 +23,17 @@ class Reading extends Model
         'date' => 'date',
     ];
 
-    public function meter(): BelongsTo
+    public function previous(): Attribute
     {
-        return $this->belongsTo(Meter::class);
-    }
-
-    public function unit(): MeasurmentUnit
-    {
-        return $this->meter->type->getUnit();
+        return Attribute::get(
+            fn (): ?Reading => self::query()
+                ->tenant()
+                ->whereBetween('date', [
+                    Carbon::parse($this->date)->subMonth()->startOfMonth(),
+                    Carbon::parse($this->date)->subMonth()->endOfMonth(),
+                ])
+                ->first()
+        );
     }
 
     public function scopeTenant(Builder $query): void
@@ -43,6 +48,16 @@ class Reading extends Model
                 today()->startOfYear(),
                 today()->endOfYear(),
             ]);
+    }
+
+    public function meter(): BelongsTo
+    {
+        return $this->belongsTo(Meter::class);
+    }
+
+    public function unit(): MeasurmentUnit
+    {
+        return $this->meter->type->getUnit();
     }
 
     public static function firstOfYear(): ?self

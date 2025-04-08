@@ -12,7 +12,7 @@ class EditMeter extends EditTenantProfile
 
     public static function getLabel(): string
     {
-        return trans('meter.edit');
+        return __('meter.edit');
     }
 
     public function form(Form $form): Form

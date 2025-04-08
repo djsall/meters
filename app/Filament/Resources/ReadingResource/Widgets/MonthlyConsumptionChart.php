@@ -13,7 +13,17 @@ class MonthlyConsumptionChart extends ChartWidget
 {
     public function getHeading(): string|Htmlable|null
     {
-        return trans('charts.monthly_consumption.heading');
+        return __('charts.monthly_consumption.heading');
+    }
+
+    protected function getFilters(): ?array
+    {
+        return [
+            'today' => 'Today',
+            'week' => 'Last week',
+            'month' => 'Last month',
+            'year' => 'This year',
+        ];
     }
 
     protected static ?string $maxHeight = '200px';
@@ -49,7 +59,7 @@ class MonthlyConsumptionChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => trans('charts.monthly_consumption.label'),
+                    'label' => __('charts.monthly_consumption.label'),
                     'data' => $data
                         ->map(static function (TrendValue $value) use ($first, $previous): ?int {
                             if ($value->aggregate > 0) {

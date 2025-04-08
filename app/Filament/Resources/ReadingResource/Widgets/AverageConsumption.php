@@ -11,7 +11,7 @@ class AverageConsumption extends BaseWidget
 {
     protected function getStats(): array
     {
-        $label = trans('reading.average_consumption');
+        $label = __('reading.average_consumption');
         $tenant = Filament::getTenant();
         $first = Reading::firstOfYear();
         $last = Reading::lastOfYear();

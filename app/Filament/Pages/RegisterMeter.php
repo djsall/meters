@@ -14,7 +14,7 @@ class RegisterMeter extends RegisterTenant
 
     public static function getLabel(): string
     {
-        return trans('meter.create');
+        return __('meter.create');
     }
 
     public function form(Form $form): Form

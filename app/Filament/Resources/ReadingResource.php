@@ -20,12 +20,12 @@ class ReadingResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return trans('reading.label');
+        return __('reading.label');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return trans('reading.pluralLabel');
+        return __('reading.pluralLabel');
     }
 
     public static function form(Form $form): Form
@@ -33,11 +33,11 @@ class ReadingResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('value')
-                    ->label(trans('reading.value'))
+                    ->label(__('reading.value'))
                     ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
                     ->numeric(),
                 Forms\Components\DatePicker::make('date')
-                    ->label(trans('reading.date'))
+                    ->label(__('reading.date'))
                     ->default(today()),
             ])
             ->columns(1);
@@ -58,12 +58,18 @@ class ReadingResource extends Resource
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(thousandsSeparator: ' ')
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
-                    ->label(trans('reading.value'))
+                    ->label(__('reading.value'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('date')
                     ->date(format: 'Y-m-d')
-                    ->label(trans('reading.date'))
+                    ->label(__('reading.date'))
                     ->sortable(),
+                Tables\Columns\TextColumn::make('difference')
+                    ->numeric(thousandsSeparator: ' ')
+                    ->label(__('reading.difference'))
+                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
+                    ->getStateUsing(fn (Reading $record) => $record->value - $record->previous?->value)
+                    ->color('primary'),
             ])
             ->defaultPaginationPageOption(25)
             ->filters([

@@ -34,14 +34,14 @@ class Reading extends Model
         );
     }
 
-    public function scopeTenant(Builder $query): void
+    public function scopeTenant(Builder $query): Builder
     {
-        $query->whereBelongsTo(Filament::getTenant(), 'meter');
+        return $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 
-    public function scopeYear(Builder $query, ?int $year = null): void
+    public function scopeYear(Builder $query, ?int $year = null): Builder
     {
-        $query
+        return $query
             ->whereBetween('date', [
                 today()->when($year, fn (Carbon $date) => $date->year($year))->startOfYear(),
                 today()->when($year, fn (Carbon $date) => $date->year($year))->endOfYear(),

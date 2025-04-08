@@ -11,6 +11,11 @@ class AverageConsumption extends BaseWidget
 {
     protected string $defaultValue = '-';
 
+    protected function getColumns(): int
+    {
+        return 2;
+    }
+
     protected function unit(): string
     {
         return Filament::getTenant()->type->getUnit()->getLabel();
@@ -28,7 +33,7 @@ class AverageConsumption extends BaseWidget
             $value = number_format($value, thousands_separator: ' ');
         }
 
-        return Stat::make(__('reading.average_consumption'), "$value {$this->unit()}");
+        return $this->makeStat(__('reading.average_consumption'), $value);
     }
 
     protected function getPreviousYear(): Stat
@@ -43,14 +48,57 @@ class AverageConsumption extends BaseWidget
             $value = number_format($value, thousands_separator: ' ');
         }
 
-        return Stat::make(__('reading.average_consumption_last_year'), "$value {$this->unit()}");
+        return $this->makeStat(title: __('reading.average_consumption_last_year'), value: $value);
+    }
+
+    protected function getDailyAverage(): Stat
+    {
+
+        $latest_reading = Reading::lastOfYear();
+        $previous_reading = $latest_reading->previous;
+
+        $value = $this->defaultValue;
+
+        if ($previous_reading && $latest_reading) {
+            $num_days = $latest_reading->date->diffInDays($previous_reading->date);
+            $value = ($latest_reading->value - $previous_reading->value) / $num_days;
+        }
+
+        return $this->makeStat(title: __('reading.average_daily_consumption_this_month'), value: $value);
+    }
+
+    protected function getPreviousDailyAverage(): Stat
+    {
+
+        $latest_reading = Reading::lastOfYear()->previous;
+        $previous_reading = $latest_reading->previous;
+
+        $value = $this->defaultValue;
+
+        if ($previous_reading && $latest_reading) {
+            $num_days = $latest_reading->date->diffInDays($previous_reading->date);
+            $value = ($latest_reading->value - $previous_reading->value) / $num_days;
+        }
+
+        return $this->makeStat(title: __('reading.average_daily_consumption_previous_month'), value: $value);
+    }
+
+    protected function makeStat(string $title, float $value): stat
+    {
+        $value = round($value, 2);
+        $value = number_format($value, thousands_separator: ' ');
+
+        return Stat::make($title, "$value {$this->unit()}");
+
     }
 
     protected function getStats(): array
     {
 
         return [
+            $this->getDailyAverage(),
             $this->getCurrentYear(),
+            $this->getPreviousDailyAverage(),
             $this->getPreviousYear(),
         ];
     }

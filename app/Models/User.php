@@ -6,6 +6,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -54,14 +55,44 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'last_notified' => 'datetime',
     ];
 
-    public function canAccessPanel(Panel $panel): bool
+    public function scopeHasOverdueMeters(Builder $builder): Builder
     {
-        return true;
+        return $builder
+            ->whereHas('meters', fn (Builder $query): Builder => $query->noRecentReadings())
+            ->orWhereHas('sharedMeters', fn (Builder $query): Builder => $query->noRecentReadings());
     }
 
     public function meters(): HasMany
     {
         return $this->hasMany(Meter::class);
+    }
+
+    public function overdueMeters(): HasMany
+    {
+        return $this
+            ->meters()
+            ->whereDoesntHave('readings', function (Builder $query) {
+                $query->whereDate('date', '>', today()->subMonth());
+            });
+    }
+
+    public function sharedMeters(): HasManyJson
+    {
+        return $this->hasManyJson(Meter::class, 'shared_users');
+    }
+
+    public function overdueSharedMeters(): HasMany
+    {
+        return $this
+            ->sharedMeters()
+            ->whereDoesntHave('readings', function (Builder $query) {
+                $query->whereDate('date', '>', today()->subMonth());
+            });
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return true;
     }
 
     public function canAccessTenant(Model $tenant): bool
@@ -72,10 +103,5 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function getTenants(Panel $panel): array|Collection
     {
         return $this->meters->merge($this->sharedMeters);
-    }
-
-    public function sharedMeters(): HasManyJson
-    {
-        return $this->hasManyJson(Meter::class, 'shared_users');
     }
 }

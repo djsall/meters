@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MeterType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,6 +30,14 @@ class Meter extends Model
         'settings' => 'array',
         'shared_users' => 'json',
     ];
+
+    public function scopeNoRecentReadings(Builder $builder): Builder
+    {
+        return $builder
+            ->whereDoesntHave('readings', function (Builder $query) {
+                $query->whereDate('date', '>', today()->subMonth());
+            });
+    }
 
     public function readings(): HasMany
     {

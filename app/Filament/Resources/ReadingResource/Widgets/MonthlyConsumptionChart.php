@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 
 class MonthlyConsumptionChart extends ChartWidget
 {
-    public ?string $filter = 'previous_year';
+    public ?string $filter = 'current_year';
 
     protected static ?string $pollingInterval = null;
 

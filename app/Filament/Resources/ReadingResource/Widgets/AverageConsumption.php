@@ -26,7 +26,7 @@ class AverageConsumption extends BaseWidget
         $first = Reading::firstOfYear();
         $last = Reading::lastOfYear();
 
-        $value = $this->defaultValue;
+        $value = null;
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
@@ -40,7 +40,7 @@ class AverageConsumption extends BaseWidget
         $first = Reading::firstOfYear(today()->subYear()->format('Y'));
         $last = Reading::lastOfYear(today()->subYear()->format('Y'));
 
-        $value = $this->defaultValue;
+        $value = null;
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
@@ -55,7 +55,7 @@ class AverageConsumption extends BaseWidget
         $latest_reading = Reading::lastOfYear();
         $previous_reading = $latest_reading->previous;
 
-        $value = $this->defaultValue;
+        $value = null;
 
         if ($previous_reading && $latest_reading) {
             $num_days = $latest_reading->date->diffInDays($previous_reading->date);
@@ -71,7 +71,7 @@ class AverageConsumption extends BaseWidget
         $latest_reading = Reading::lastOfYear()->previous;
         $previous_reading = $latest_reading->previous;
 
-        $value = $this->defaultValue;
+        $value = null;
 
         if ($previous_reading && $latest_reading) {
             $num_days = $latest_reading->date->diffInDays($previous_reading->date);
@@ -81,13 +81,17 @@ class AverageConsumption extends BaseWidget
         return $this->makeStat(title: __('reading.average_daily_consumption_previous_month'), value: $value);
     }
 
-    protected function makeStat(string $title, float $value): stat
+    protected function makeStat(string $title, ?float $value): Stat
     {
-        $value = round($value, 2);
-        $value = number_format($value, decimals: 2, thousands_separator: ' ');
+        $final_text = $this->defaultValue;
 
-        return Stat::make($title, "$value {$this->unit()}");
+        if ($value) {
+            $value = round($value, 2);
+            $value = number_format($value, decimals: 2, thousands_separator: ' ');
+            $final_text = "$value {$this->unit()}";
+        }
 
+        return Stat::make($title, $final_text);
     }
 
     protected function getStats(): array

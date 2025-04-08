@@ -30,7 +30,6 @@ class AverageConsumption extends BaseWidget
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
-            $value = number_format($value, thousands_separator: ' ');
         }
 
         return $this->makeStat(__('reading.average_consumption'), $value);
@@ -45,7 +44,6 @@ class AverageConsumption extends BaseWidget
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
-            $value = number_format($value, thousands_separator: ' ');
         }
 
         return $this->makeStat(title: __('reading.average_consumption_last_year'), value: $value);

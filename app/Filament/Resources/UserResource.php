@@ -58,6 +58,8 @@ class UserResource extends Resource
                         'user' => ucfirst(__('user.label')),
                         'admin' => __('user.admin'),
                     ]),
+                Forms\Components\DatePicker::make('last_notified')
+                    ->label(__('user.last_notified')),
             ]);
     }
 

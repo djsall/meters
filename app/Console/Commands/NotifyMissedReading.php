@@ -15,20 +15,22 @@ class NotifyMissedReading extends Command
     {
         Meter::query()
             ->with(['user', 'sharedWith', 'user.notifications', 'sharedWith.notifications'])
-            ->whereDoesntHave('user.notifications', function (Builder $query) {
-                $query->whereDate('created_at', '>', today()->subMonth());
-            })
-            ->whereDoesntHave('sharedWith.notifications', function (Builder $query) {
-                $query->whereDate('created_at', '>', today()->subMonth());
-            })
             ->whereDoesntHave('readings', function (Builder $query) {
                 $query->whereDate('date', '>', today()->subMonth());
+            })
+            ->whereDoesntHave('user', function (Builder $query) {
+                $query->whereDate('last_notified', '>', today()->subMonth());
+            })->whereDoesntHave('sharedWith', function (Builder $query) {
+                $query->whereDate('last_notified', '>', today()->subMonth());
             })
             ->get()
             ->each(function (Meter $meter) {
                 $meter->user->notify(new ForgotToRead($meter));
+                $meter->user->updateQuietly(['last_notified' => today()]);
+
                 foreach ($meter->sharedWith as $sharedWith) {
                     $sharedWith->notify(new ForgotToRead($meter));
+                    $sharedWith->updateQuietly(['last_notified' => today()]);
                 }
             });
     }

@@ -5,4 +5,5 @@ return [
     'role' => 'Jogosultság',
     'label' => 'felhasználó',
     'plural_label' => 'felhasználók',
+    'last_notified' => 'Utoljára értesítve',
 ];

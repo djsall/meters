@@ -65,7 +65,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->bootUsing(function () {
                 Table::configureUsing(function (Table $table) {
-                    $table->paginationPageOptions([25, 50, 100, 'all']);
+                    $table
+                        ->paginationPageOptions([25, 50, 100, 'all'])
+                        ->persistFiltersInSession();
                 });
             });
     }

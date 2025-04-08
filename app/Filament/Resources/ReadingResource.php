@@ -11,6 +11,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ReadingResource extends Resource
 {
@@ -65,6 +66,7 @@ class ReadingResource extends Resource
                     ->label(__('reading.date'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
+                    ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
@@ -79,6 +81,7 @@ class ReadingResource extends Resource
                     })
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('daily_avg')
+                    ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.daily_avg'))
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
@@ -102,7 +105,10 @@ class ReadingResource extends Resource
             ])
             ->defaultPaginationPageOption(25)
             ->filters([
-                //
+                Tables\Filters\Filter::make('current_year')
+                    ->label(__('reading.filter.current_year'))
+                    ->default()
+                    ->query(static fn (Builder $query): Builder => $query->year()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

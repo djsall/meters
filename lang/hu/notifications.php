@@ -6,5 +6,6 @@ return [
         'greeting' => 'Szia :name,',
         'content' => 'Elfelejtetted rögzíteni az óraállást a(z) :meter mérőórádhoz ebben a hónapban.',
         'action' => 'Intézem!',
+        'salutation' => 'Üdvözlettel, <br> :name',
     ],
 ];

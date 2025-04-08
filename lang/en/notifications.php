@@ -6,5 +6,6 @@ return [
         'greeting' => 'Hello :name!',
         'content' => 'You forgot to save a reading for your :meter meter this month.',
         'action' => 'Add reading!',
+        'salutation' => 'Best regards, <br> :name',
     ],
 ];

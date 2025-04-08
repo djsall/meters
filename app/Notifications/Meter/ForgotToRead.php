@@ -9,6 +9,7 @@ use Filament\Actions\CreateAction;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\HtmlString;
 
 class ForgotToRead extends Notification
 {
@@ -34,6 +35,11 @@ class ForgotToRead extends Notification
             ->subject(__('notifications.forgot_to_read.subject'))
             ->greeting(__('notifications.forgot_to_read.greeting', ['name' => $notifiable->name]))
             ->line(__('notifications.forgot_to_read.content', ['meter' => $this->meter->name]))
-            ->action(__('notifications.forgot_to_read.action'), $url);
+            ->action(__('notifications.forgot_to_read.action'), $url)
+            ->salutation(
+                new HtmlString(
+                    __('notifications.forgot_to_read.salutation', ['name' => config('app.name')])
+                )
+            );
     }
 }

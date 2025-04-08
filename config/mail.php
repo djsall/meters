@@ -24,7 +24,7 @@ return [
     | their respective settings. Several examples have been configured for
     | you and you are free to add your own as your application requires.
     |
-    | Laravel supports a variety of mail "__port" drivers to be used while
+    | Laravel supports a variety of mail "transport" drivers to be used while
     | sending an e-mail. You will specify which one you are using for your
     | mailers below. You are free to add additional mailers as required.
     |
@@ -35,7 +35,7 @@ return [
 
     'mailers' => [
         'smtp' => [
-            '__port' => 'smtp',
+            'transport' => 'smtp',
             'url' => env('MAIL_URL'),
             'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
             'port' => env('MAIL_PORT', 587),
@@ -47,11 +47,11 @@ return [
         ],
 
         'ses' => [
-            '__port' => 'ses',
+            'transport' => 'ses',
         ],
 
         'postmark' => [
-            '__port' => 'postmark',
+            'transport' => 'postmark',
             // 'message_stream_id' => null,
             // 'client' => [
             //     'timeout' => 5,
@@ -59,28 +59,28 @@ return [
         ],
 
         'mailgun' => [
-            '__port' => 'mailgun',
+            'transport' => 'mailgun',
             // 'client' => [
             //     'timeout' => 5,
             // ],
         ],
 
         'sendmail' => [
-            '__port' => 'sendmail',
+            'transport' => 'sendmail',
             'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -bs -i'),
         ],
 
         'log' => [
-            '__port' => 'log',
+            'transport' => 'log',
             'channel' => env('MAIL_LOG_CHANNEL'),
         ],
 
         'array' => [
-            '__port' => 'array',
+            'transport' => 'array',
         ],
 
         'failover' => [
-            '__port' => 'failover',
+            'transport' => 'failover',
             'mailers' => [
                 'smtp',
                 'log',
@@ -88,7 +88,7 @@ return [
         ],
 
         'roundrobin' => [
-            '__port' => 'roundrobin',
+            'transport' => 'roundrobin',
             'mailers' => [
                 'ses',
                 'postmark',

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class Reading extends Model
 {
@@ -38,12 +39,12 @@ class Reading extends Model
         $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 
-    public function scopeCurrentYear(Builder $query): void
+    public function scopeYear(Builder $query, ?int $year = null): void
     {
         $query
             ->whereBetween('date', [
-                today()->startOfYear(),
-                today()->endOfYear(),
+                today()->when($year, fn (Carbon $date) => $date->year($year))->startOfYear(),
+                today()->when($year, fn (Carbon $date) => $date->year($year))->endOfYear(),
             ]);
     }
 
@@ -52,26 +53,28 @@ class Reading extends Model
         return $this->belongsTo(Meter::class);
     }
 
-    public function unit(): MeasurmentUnit
+    public function unit(): Attribute
     {
-        return $this->meter->type->getUnit();
+        return Attribute::get(
+            fn (): MeasurmentUnit => $this->meter->type->getUnit()
+        );
     }
 
-    public static function firstOfYear(): ?self
+    public static function firstOfYear(?int $year = null): ?self
     {
         return self::query()
+            ->oldest('date')
             ->tenant()
-            ->currentYear()
-            ->orderBy('date')
+            ->year($year)
             ->first();
     }
 
-    public static function lastOfYear(): ?self
+    public static function lastOfYear(?int $year = null): ?self
     {
         return self::query()
+            ->latest('date')
             ->tenant()
-            ->currentYear()
-            ->orderByDesc('date')
+            ->year($year)
             ->first();
     }
 }

@@ -9,24 +9,49 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class AverageConsumption extends BaseWidget
 {
-    protected function getStats(): array
+    protected string $defaultValue = '-';
+
+    protected function unit(): string
     {
-        $label = __('reading.average_consumption');
-        $tenant = Filament::getTenant();
+        return Filament::getTenant()->type->getUnit()->getLabel();
+    }
+
+    protected function getCurrentYear(): Stat
+    {
         $first = Reading::firstOfYear();
         $last = Reading::lastOfYear();
 
-        $value = '-';
+        $value = $this->defaultValue;
 
         if ($first && $last && $last->date->notEqualTo($first->date)) {
             $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
             $value = number_format($value, thousands_separator: ' ');
         }
 
-        $unit = $tenant->type->getUnit()->getLabel();
+        return Stat::make(__('reading.average_consumption'), "$value {$this->unit()}");
+    }
+
+    protected function getPreviousYear(): Stat
+    {
+        $first = Reading::firstOfYear(today()->subYear()->format('Y'));
+        $last = Reading::lastOfYear(today()->subYear()->format('Y'));
+
+        $value = $this->defaultValue;
+
+        if ($first && $last && $last->date->notEqualTo($first->date)) {
+            $value = ($last->value - $first->value) / $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth());
+            $value = number_format($value, thousands_separator: ' ');
+        }
+
+        return Stat::make(__('reading.average_consumption_last_year'), "$value {$this->unit()}");
+    }
+
+    protected function getStats(): array
+    {
 
         return [
-            Stat::make($label, "$value $unit"),
+            $this->getCurrentYear(),
+            $this->getPreviousYear(),
         ];
     }
 }

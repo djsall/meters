@@ -11,6 +11,8 @@ use Illuminate\Support\Carbon;
 
 class MonthlyConsumptionChart extends ChartWidget
 {
+    public ?string $filter = 'current_year';
+
     public function getHeading(): string|Htmlable|null
     {
         return __('charts.monthly_consumption.heading');
@@ -19,10 +21,8 @@ class MonthlyConsumptionChart extends ChartWidget
     protected function getFilters(): ?array
     {
         return [
-            'today' => 'Today',
-            'week' => 'Last week',
-            'month' => 'Last month',
-            'year' => 'This year',
+            'current_year' => __('reading.filter.current_year'),
+            'previous_year' => __('reading.filter.previous_year'),
         ];
     }
 
@@ -32,6 +32,11 @@ class MonthlyConsumptionChart extends ChartWidget
 
     protected function getData(): array
     {
+        $between = match ($this->filter) {
+            'current_year' => ['start' => now()->startOfYear(), 'end' => now()->endOfYear()],
+            'previous_year' => ['start' => now()->subYear()->startOfYear(), 'end' => now()->subYear()->endOfYear()],
+        };
+
         $first = Reading::firstOfYear()?->value;
 
         $previous =
@@ -50,8 +55,8 @@ class MonthlyConsumptionChart extends ChartWidget
             )
                 ->dateColumn('date')
                 ->between(
-                    start: now()->startOfYear(),
-                    end: now()->endOfYear(),
+                    start: $between['start'],
+                    end: $between['end'],
                 )
                 ->perMonth()
                 ->average('value');

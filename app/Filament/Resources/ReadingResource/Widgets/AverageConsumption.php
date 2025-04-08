@@ -53,7 +53,7 @@ class AverageConsumption extends BaseWidget
     {
 
         $latest_reading = Reading::lastOfYear();
-        $previous_reading = $latest_reading->previous;
+        $previous_reading = $latest_reading?->previous;
 
         $value = null;
 
@@ -69,7 +69,7 @@ class AverageConsumption extends BaseWidget
     {
 
         $latest_reading = Reading::lastOfYear()->previous;
-        $previous_reading = $latest_reading->previous;
+        $previous_reading = $latest_reading?->previous;
 
         $value = null;
 

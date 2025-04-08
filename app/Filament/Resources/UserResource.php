@@ -48,7 +48,7 @@ class UserResource extends Resource
                 Forms\Components\DateTimePicker::make('email_verified_at'),
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    ->required()
+                    ->visibleOn('create')
                     ->maxLength(255),
                 Forms\Components\Select::make('role')
                     ->label(static fn () => __('user.role'))

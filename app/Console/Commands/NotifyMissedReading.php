@@ -18,10 +18,15 @@ class NotifyMissedReading extends Command
             ->whereDoesntHave('readings', function (Builder $query) {
                 $query->whereDate('date', '>', today()->subMonth());
             })
-            ->whereDoesntHave('user', function (Builder $query) {
-                $query->whereDate('last_notified', '>', today()->subMonth());
-            })->whereDoesntHave('sharedWith', function (Builder $query) {
-                $query->whereDate('last_notified', '>', today()->subMonth());
+            ->whereHas('user', function (Builder $query) {
+                $query
+                    ->whereDate('last_notified', '<', today()->subMonth())
+                    ->orWhereNull('last_notified');
+            })
+            ->whereHas('sharedWith', function (Builder $query) {
+                $query
+                    ->whereDate('last_notified', '<', today()->subMonth())
+                    ->orWhereNull('last_notified');
             })
             ->get()
             ->each(function (Meter $meter) {

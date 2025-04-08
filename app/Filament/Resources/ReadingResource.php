@@ -68,7 +68,36 @@ class ReadingResource extends Resource
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
-                    ->getStateUsing(fn (Reading $record) => $record->value - $record->previous?->value)
+                    ->getStateUsing(function (Reading $record) {
+                        $previous_reading = $record->previous;
+
+                        if (! $previous_reading) {
+                            return null;
+                        }
+
+                        return $record->value - $previous_reading->value;
+                    })
+                    ->color('primary'),
+                Tables\Columns\TextColumn::make('daily_avg')
+                    ->numeric(thousandsSeparator: ' ')
+                    ->label(__('reading.daily_avg'))
+                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
+                    ->getStateUsing(function (Reading $record) {
+                        $previous_reading = $record->previous;
+
+                        if (! $previous_reading) {
+                            return null;
+                        }
+
+                        $num_days = $record->date->diffInDays($previous_reading->date);
+                        $value = ($record->value - $previous_reading?->value) / $num_days;
+
+                        return number_format(
+                            num: round($value, 2),
+                            decimals: 2,
+                            thousands_separator: ' '
+                        );
+                    })
                     ->color('primary'),
             ])
             ->defaultPaginationPageOption(25)

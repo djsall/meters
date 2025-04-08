@@ -86,7 +86,7 @@ class AverageConsumption extends BaseWidget
     protected function makeStat(string $title, float $value): stat
     {
         $value = round($value, 2);
-        $value = number_format($value, thousands_separator: ' ');
+        $value = number_format($value, decimals: 2, thousands_separator: ' ');
 
         return Stat::make($title, "$value {$this->unit()}");
 

@@ -11,7 +11,9 @@ use Illuminate\Support\Carbon;
 
 class MonthlyConsumptionChart extends ChartWidget
 {
-    public ?string $filter = 'current_year';
+    public ?string $filter = 'previous_year';
+
+    protected static ?string $pollingInterval = null;
 
     public function getHeading(): string|Htmlable|null
     {
@@ -37,7 +39,7 @@ class MonthlyConsumptionChart extends ChartWidget
             'previous_year' => ['start' => now()->subYear()->startOfYear(), 'end' => now()->subYear()->endOfYear()],
         };
 
-        $first = Reading::firstOfYear()?->value;
+        $first = Reading::firstOfYear($between['start']->format('Y'))?->value;
 
         $previous =
             static fn ($date): int => Reading::query()

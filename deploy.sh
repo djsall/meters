@@ -18,7 +18,7 @@ echo "⬇️ Laravel down"
 
     echo "🔄 Restarting Php"
 
-    sudo -S service php8.1-fpm reload
+    sudo -S service php8.4-fpm reload
     sudo -S service nginx reload
 
     echo "🗃️ Running migrations"

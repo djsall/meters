@@ -55,6 +55,7 @@ class ReadingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with('meter:id,type'))
             ->columns([
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(thousandsSeparator: ' ')
@@ -78,28 +79,6 @@ class ReadingResource extends Resource
                         }
 
                         return $record->value - $previous_reading->value;
-                    })
-                    ->color('primary'),
-                Tables\Columns\TextColumn::make('daily_avg')
-                    ->toggleable()
-                    ->numeric(thousandsSeparator: ' ')
-                    ->label(__('reading.daily_avg'))
-                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
-                    ->getStateUsing(function (Reading $record) {
-                        $previous_reading = $record->previous;
-
-                        if (! $previous_reading) {
-                            return null;
-                        }
-
-                        $num_days = $record->date->diffInDays($previous_reading->date, absolute: true);
-                        $value = ($record->value - $previous_reading?->value) / $num_days;
-
-                        return number_format(
-                            num: round($value, 2),
-                            decimals: 2,
-                            thousands_separator: ' '
-                        );
                     })
                     ->color('primary'),
             ])

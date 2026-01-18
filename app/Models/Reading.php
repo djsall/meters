@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class Reading extends Model
 {
@@ -30,7 +29,7 @@ class Reading extends Model
             fn (): ?Reading => self::query()
                 ->tenant()
                 ->latest('date')
-                ->whereDate('date', '<', $this->date->subMonth()->lastOfMonth())
+                ->whereDate('date', '<', $this->date->startOfMonth())
                 ->first()
         );
     }
@@ -55,11 +54,9 @@ class Reading extends Model
     #[Scope]
     public function year(Builder $query, ?int $year = null): Builder
     {
-        return $query
-            ->whereBetween('date', [
-                today()->when($year, fn (Carbon $date) => $date->year($year))->startOfYear(),
-                today()->when($year, fn (Carbon $date) => $date->year($year))->endOfYear(),
-            ]);
+        $year ??= today()->year;
+
+        return $query->whereYear('date', $year);
     }
 
     public function meter(): BelongsTo

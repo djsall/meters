@@ -14,7 +14,7 @@ echo "⬇️ Laravel down"
 
     echo "📦 Installing composer dependencies"
 
-    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -q
 
     echo "🔄 Restarting Php"
 

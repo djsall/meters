@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MeterType;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,7 +32,8 @@ class Meter extends Model
         'shared_users' => 'json',
     ];
 
-    public function scopeNoRecentReadings(Builder $builder): Builder
+    #[Scope]
+    public function noRecentReadings(Builder $builder): Builder
     {
         return $builder
             ->whereDoesntHave('readings', function (Builder $query) {

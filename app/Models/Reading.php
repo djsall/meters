@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MeasurmentUnit;
 use Filament\Facades\Filament;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -34,12 +35,14 @@ class Reading extends Model
         );
     }
 
-    public function scopeTenant(Builder $query): Builder
+    #[Scope]
+    public function tenant(Builder $query): Builder
     {
         return $query->whereBelongsTo(Filament::getTenant(), 'meter');
     }
 
-    public function scopeYear(Builder $query, ?int $year = null): Builder
+    #[Scope]
+    public function year(Builder $query, ?int $year = null): Builder
     {
         return $query
             ->whereBetween('date', [

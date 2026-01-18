@@ -6,6 +6,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -55,11 +56,12 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'last_notified' => 'datetime',
     ];
 
-    public function scopeHasOverdueMeters(Builder $builder): Builder
+    #[Scope]
+    public function hasOverdueMeters(Builder $builder): Builder
     {
         return $builder
-            ->whereHas('meters', fn (Builder $query): Builder => $query->noRecentReadings())
-            ->orWhereHas('sharedMeters', fn (Builder $query): Builder => $query->noRecentReadings());
+            ->has('overdueMeters')
+            ->orHas('overdueSharedMeters');
     }
 
     public function meters(): HasMany

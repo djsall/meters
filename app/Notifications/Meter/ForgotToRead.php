@@ -15,9 +15,7 @@ class ForgotToRead extends Notification
 {
     use Queueable;
 
-    public function __construct(protected Meter $meter)
-    {
-    }
+    public function __construct(protected Meter $meter) {}
 
     public function via(): array
     {

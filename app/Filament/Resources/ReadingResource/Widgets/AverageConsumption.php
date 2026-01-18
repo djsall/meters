@@ -62,7 +62,7 @@ class AverageConsumption extends BaseWidget
         $value = null;
 
         if ($previous_reading && $latest_reading) {
-            $num_days = $latest_reading->date->diffInDays($previous_reading->date);
+            $num_days = $latest_reading->date->diffInDays($previous_reading->date, absolute: true);
             $value = ($latest_reading->value - $previous_reading->value) / $num_days;
         }
 
@@ -78,7 +78,7 @@ class AverageConsumption extends BaseWidget
         $value = null;
 
         if ($previous_reading && $latest_reading) {
-            $num_days = $latest_reading->date->diffInDays($previous_reading->date);
+            $num_days = $latest_reading->date->diffInDays($previous_reading->date, absolute: true);
             $value = ($latest_reading->value - $previous_reading->value) / $num_days;
         }
 

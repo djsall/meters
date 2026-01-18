@@ -92,7 +92,7 @@ class ReadingResource extends Resource
                             return null;
                         }
 
-                        $num_days = $record->date->diffInDays($previous_reading->date);
+                        $num_days = $record->date->diffInDays($previous_reading->date, absolute: true);
                         $value = ($record->value - $previous_reading?->value) / $num_days;
 
                         return number_format(

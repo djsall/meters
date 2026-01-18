@@ -30,6 +30,7 @@ class Reading extends Model
                 ->tenant()
                 ->latest('date')
                 ->whereDate('date', '<', $this->date->startOfMonth())
+                ->whereDate('date', '>', $this->date->subMonth()->startOfMonth())
                 ->first()
         );
     }

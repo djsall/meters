@@ -58,7 +58,7 @@ class AverageConsumption extends BaseWidget
     {
 
         $latest_reading = Reading::lastOfYear();
-        $previous_reading = $latest_reading?->previous;
+        $previous_reading = $latest_reading?->previous_month;
 
         $value = null;
 
@@ -73,8 +73,8 @@ class AverageConsumption extends BaseWidget
     protected function getPreviousDailyAverage(): Stat
     {
 
-        $latest_reading = Reading::lastOfYear()?->previous;
-        $previous_reading = $latest_reading?->previous;
+        $latest_reading = Reading::lastOfYear()?->previous_month;
+        $previous_reading = $latest_reading?->previous_month;
 
         $value = null;
 

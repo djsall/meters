@@ -24,6 +24,17 @@ class Reading extends Model
         'date' => 'date',
     ];
 
+    public function previousMonth(): Attribute
+    {
+        return Attribute::get(
+            fn (): ?Reading => self::query()
+                ->tenant()
+                ->latest('date')
+                ->whereDate('date', '<', $this->date->subMonth()->lastOfMonth())
+                ->first()
+        );
+    }
+
     public function previous(): Attribute
     {
         return Attribute::get(

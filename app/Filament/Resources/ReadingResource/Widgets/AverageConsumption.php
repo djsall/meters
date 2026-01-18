@@ -16,9 +16,10 @@ class AverageConsumption extends BaseWidget
         return 2;
     }
 
-    protected function unit(): string
-    {
-        return Filament::getTenant()->type->getUnit()->getLabel();
+    protected string $unit {
+        get {
+            return Filament::getTenant()->type->getUnit()->getLabel();
+        }
     }
 
     protected function getCurrentYear(): Stat
@@ -30,7 +31,7 @@ class AverageConsumption extends BaseWidget
 
         $value = null;
 
-        if ($first && $last && $last->date->notEqualTo($first->date)) {
+        if ($first && $last && $divider > 1) {
             $value = ($last->value - $first->value) / $divider;
         }
 
@@ -46,7 +47,7 @@ class AverageConsumption extends BaseWidget
 
         $value = null;
 
-        if ($first && $last && $last->date->notEqualTo($first->date)) {
+        if ($first && $last && $divider > 1) {
             $value = ($last->value - $first->value) / $divider;
         }
 
@@ -90,9 +91,9 @@ class AverageConsumption extends BaseWidget
         $final_text = $this->defaultValue;
 
         if ($value) {
-            $value = round($value, 2);
-            $value = number_format($value, decimals: 2, thousands_separator: ' ');
-            $final_text = "$value {$this->unit()}";
+            $value = round($value, 1);
+            $value = number_format($value, decimals: 1, thousands_separator: ' ');
+            $final_text = "$value {$this->unit}";
         }
 
         return Stat::make($title, $final_text);

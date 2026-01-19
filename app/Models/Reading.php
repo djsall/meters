@@ -27,8 +27,8 @@ class Reading extends Model
     {
         return Attribute::get(
             fn (): ?Reading => self::query()
-                ->tenant()
                 ->latest('date')
+                ->where('meter_id', $this->meter_id)
                 ->whereDate('date', '<', $this->date->startOfMonth())
                 ->whereDate('date', '>', $this->date->subMonth()->startOfMonth())
                 ->first()
@@ -39,8 +39,8 @@ class Reading extends Model
     {
         return Attribute::get(
             fn (): ?Reading => self::query()
-                ->tenant()
                 ->latest('date')
+                ->where('meter_id', $this->meter_id)
                 ->whereDate('date', '<', $this->date)
                 ->first()
         );

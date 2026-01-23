@@ -33,11 +33,11 @@ class AverageConsumption extends BaseWidget
 
     protected function getCurrentYearAverage(): Stat
     {
-        $first = $this->meter->firstReadingThisYear;
-        $last = $this->meter->lastReading;
+        $latest = $this->meter->firstReadingThisYear;
+        $previous = $this->meter->lastReading;
 
-        $months = $first && $last ? $first->date->startOfMonth()->diffInMonths($last->date->endOfMonth()) : 0;
-        $value = $this->calculateAverage($last, $first, max(1, $months));
+        $months = ($latest && $previous) ? $latest->date->startOfMonth()->diffInMonths($previous->date->endOfMonth()) : 0;
+        $value = $this->calculateAverage($previous, $latest, max(1, $months));
 
         return $this->makeStat(__('reading.average_consumption'), $value);
     }
@@ -45,10 +45,10 @@ class AverageConsumption extends BaseWidget
     protected function getDailyAverage(): Stat
     {
         $latest = $this->meter->lastReading;
-        $prev = $this->meter->firstReadingThisMonth;
+        $previous = $this->meter->firstReadingThisMonth;
 
-        $days = ($latest && $prev) ? $latest->date->diffInDays($prev->date, absolute: true) : 0;
-        $value = $this->calculateAverage($latest, $prev, $days);
+        $days = ($latest && $previous) ? $latest->date->diffInDays($previous->date, absolute: true) : 0;
+        $value = $this->calculateAverage($latest, $previous, $days);
 
         return $this->makeStat(__('reading.average_daily_consumption_this_month'), $value);
     }

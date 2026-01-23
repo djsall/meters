@@ -74,11 +74,14 @@ class ReadingResource extends Resource
                     ->label(__('reading.date'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
-                    ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
                     ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->date(format: 'Y-m-d H:i:s')
+                    ->label(__('reading.created_at'))
+                    ->sortable(),
             ])
             ->defaultPaginationPageOption(25)
             ->filters([

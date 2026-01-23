@@ -5,6 +5,7 @@ return [
     'pluralLabel' => 'óraállások',
     'value' => 'Érték',
     'date' => 'Dátum',
+    'created_at' => 'Létrehozva',
     'difference' => 'Előzőhöz képest',
     'average_consumption' => [
         'yearly' => [

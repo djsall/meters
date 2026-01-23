@@ -54,6 +54,8 @@ class ReadingResource extends Resource
 
     public static function table(Table $table): Table
     {
+        static $previousReading = null;
+
         return $table
             ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with('meter:id,type'))
             ->columns([
@@ -70,8 +72,7 @@ class ReadingResource extends Resource
                     ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
-                    ->state(function (Reading $record) {
-                        static $previousReading = null;
+                    ->getStateUsing(function (Reading $record) use (&$previousReading) {
                         $currentReading = $record->value;
 
                         if ($previousReading === null) {

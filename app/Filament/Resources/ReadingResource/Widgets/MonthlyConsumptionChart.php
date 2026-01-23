@@ -60,7 +60,7 @@ class MonthlyConsumptionChart extends ChartWidget
     {
         $first = $this->meter->firstReadingThisYear?->value;
 
-        $previous = static fn ($date): int => $this->readings
+        $previous = fn ($date): int => $this->readings
             ->whereBetween('date', [
                 Carbon::parse($date)->subMonth()->startOfMonth(),
                 Carbon::parse($date)->subMonth()->endOfMonth(),

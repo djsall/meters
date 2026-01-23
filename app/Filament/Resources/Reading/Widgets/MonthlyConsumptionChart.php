@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\ReadingResource\Widgets;
+namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
 use Filament\Facades\Filament;
@@ -15,7 +15,11 @@ class MonthlyConsumptionChart extends ChartWidget
 {
     public ?string $filter = 'current_year';
 
-    protected static ?string $pollingInterval = null;
+    protected ?string $pollingInterval = null;
+
+    protected ?string $maxHeight = '200px';
+
+    protected int|string|array $columnSpan = 2;
 
     public function getHeading(): string|Htmlable|null
     {
@@ -50,10 +54,6 @@ class MonthlyConsumptionChart extends ChartWidget
             return $this->meter->readings()->latest('date')->whereBetween('date', $this->dateRange)->get();
         }
     }
-
-    protected static ?string $maxHeight = '200px';
-
-    protected int|string|array $columnSpan = 2;
 
     protected function getData(): array
     {

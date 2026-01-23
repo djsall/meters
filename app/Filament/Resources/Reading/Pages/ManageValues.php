@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\ReadingResource\Pages;
+namespace App\Filament\Resources\Reading\Pages;
 
-use App\Filament\Resources\ReadingResource;
+use App\Filament\Resources\Reading;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
 
 class ManageValues extends ManageRecords
 {
-    protected static string $resource = ReadingResource::class;
+    protected static string $resource = Reading\ReadingResource::class;
 
     protected function getHeaderActions(): array
     {
@@ -20,14 +20,14 @@ class ManageValues extends ManageRecords
     public function getHeaderWidgets(): array
     {
         return [
-            ReadingResource\Widgets\AverageConsumption::class,
+            Reading\Widgets\AverageConsumption::class,
         ];
     }
 
     protected function getFooterWidgets(): array
     {
         return [
-            ReadingResource\Widgets\MonthlyConsumptionChart::class,
+            Reading\Widgets\MonthlyConsumptionChart::class,
         ];
     }
 }

@@ -4,8 +4,8 @@ namespace App\Filament\Pages;
 
 use App\Filament\Pages\Concerns\HasMeterForm;
 use App\Models\Meter;
-use Filament\Forms\Form;
 use Filament\Pages\Tenancy\RegisterTenant;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 
 class RegisterMeter extends RegisterTenant
@@ -17,10 +17,9 @@ class RegisterMeter extends RegisterTenant
         return __('meter.create');
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema(static::getMeterForm());
+        return $schema->schema(static::getMeterForm());
     }
 
     protected function handleRegistration(array $data): Model

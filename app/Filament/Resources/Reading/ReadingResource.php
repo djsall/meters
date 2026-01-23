@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Reading;
 
-use App\Filament\Resources\ReadingResource\Pages;
-use App\Filament\Resources\ReadingResource\Widgets;
 use App\Models\Reading;
+use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,7 +19,7 @@ class ReadingResource extends Resource
 {
     protected static ?string $model = Reading::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard';
+    protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-clipboard';
 
     public static function getModelLabel(): string
     {
@@ -29,9 +31,9 @@ class ReadingResource extends Resource
         return __('reading.pluralLabel');
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\TextInput::make('value')
                     ->label(__('reading.value'))
@@ -85,17 +87,15 @@ class ReadingResource extends Resource
                     ->default()
                     ->query(static fn (Builder $query): Builder => $query->whereYear('date', today()->year)),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
+            ->recordActions([
+                EditAction::make()
                     ->extraModalFooterActions([
-                        Tables\Actions\DeleteAction::make(),
+                        DeleteAction::make(),
                     ]),
             ])
             ->defaultSort('date')
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+            ->toolbarActions([
+                DeleteBulkAction::make(),
             ]);
     }
 

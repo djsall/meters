@@ -3,8 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Pages\Concerns\HasMeterForm;
-use Filament\Forms\Form;
 use Filament\Pages\Tenancy\EditTenantProfile;
+use Filament\Schemas\Schema;
 
 class EditMeter extends EditTenantProfile
 {
@@ -15,9 +15,9 @@ class EditMeter extends EditTenantProfile
         return __('meter.edit');
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->columns(1)
             ->schema(static::GetMeterForm());
     }

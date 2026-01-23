@@ -2,7 +2,7 @@
 
 namespace App\Notifications\Meter;
 
-use App\Filament\Resources\ReadingResource;
+use App\Filament\Resources\Reading\ReadingResource;
 use App\Models\Meter;
 use App\Models\User;
 use Filament\Actions\CreateAction;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\ReadingResource\Widgets;
+namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
 use App\Models\Reading;

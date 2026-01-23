@@ -58,11 +58,8 @@ class ReadingResource extends Resource
             ->modifyQueryUsing(static function (Builder $query): Builder {
                 return $query
                     ->with('meter:id,type')
-                    ->addSelect([
-                        'difference' => Reading::query()
-                            ->selectRaw('value - LAG(value) OVER (ORDER BY date ASC) as difference')
-                            ->whereBelongsTo(Filament::getTenant()),
-                    ]);
+                    ->select('*')
+                    ->selectRaw('value - LAG(value) OVER (ORDER BY date ASC) as difference');
             })
             ->columns([
                 Tables\Columns\TextColumn::make('value')
@@ -78,7 +75,7 @@ class ReadingResource extends Resource
                     ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
-                    ->suffix(static fn(Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
+                    ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
             ])
             ->defaultPaginationPageOption(25)
@@ -86,7 +83,7 @@ class ReadingResource extends Resource
                 Tables\Filters\Filter::make('current_year')
                     ->label(__('reading.filter.current_year'))
                     ->default()
-                    ->query(static fn(Builder $query): Builder => $query->year()),
+                    ->query(static fn (Builder $query): Builder => $query->year()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

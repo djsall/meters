@@ -70,7 +70,7 @@ class ReadingResource extends Resource
                     ->label(__('reading.value'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('date')
-                    ->date(format: 'Y-m-d')
+                    ->date(format: 'Y.m.d')
                     ->label(__('reading.date'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
@@ -79,7 +79,7 @@ class ReadingResource extends Resource
                     ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->date(format: 'Y-m-d H:i:s')
+                    ->date(format: 'Y.m.d H:i')
                     ->label(__('reading.created_at'))
                     ->sortable(),
             ])

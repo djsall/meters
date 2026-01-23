@@ -54,10 +54,16 @@ class ReadingResource extends Resource
 
     public static function table(Table $table): Table
     {
-        static $previousReading = null;
-
         return $table
-            ->modifyQueryUsing(static fn (Builder $query): Builder => $query->with('meter:id,type'))
+            ->modifyQueryUsing(static function (Builder $query): Builder {
+                return $query
+                    ->with('meter:id,type')
+                    ->addSelect([
+                        'difference' => Reading::query()
+                            ->selectRaw('value - LAG(value) OVER (ORDER BY date ASC) as difference')
+                            ->whereBelongsTo(Filament::getTenant()),
+                    ]);
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(thousandsSeparator: ' ')
@@ -72,20 +78,7 @@ class ReadingResource extends Resource
                     ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
-                    ->getStateUsing(function (Reading $record) use (&$previousReading) {
-                        $currentReading = $record->value;
-
-                        if ($previousReading === null) {
-                            $previousReading = $currentReading;
-
-                            return null;
-                        }
-
-                        $delta = $currentReading - $previousReading;
-                        $previousReading = $currentReading;
-
-                        return "{$delta} {$record->meter->type->getUnit()->getLabel()}";
-                    })
+                    ->suffix(static fn(Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
             ])
             ->defaultPaginationPageOption(25)
@@ -93,7 +86,7 @@ class ReadingResource extends Resource
                 Tables\Filters\Filter::make('current_year')
                     ->label(__('reading.filter.current_year'))
                     ->default()
-                    ->query(static fn (Builder $query): Builder => $query->year()),
+                    ->query(static fn(Builder $query): Builder => $query->year()),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

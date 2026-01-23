@@ -70,15 +70,20 @@ class ReadingResource extends Resource
                     ->toggleable()
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
-                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
-                    ->getStateUsing(function (Reading $record) {
-                        $previous_reading = $record->previousReading;
+                    ->state(function (Reading $record) {
+                        static $previousReading = null;
+                        $currentReading = $record->value;
 
-                        if (! $previous_reading) {
+                        if ($previousReading === null) {
+                            $previousReading = $currentReading;
+
                             return null;
                         }
 
-                        return $record->value - $previous_reading->value;
+                        $delta = $currentReading - $previousReading;
+                        $previousReading = $currentReading;
+
+                        return "{$delta} {$record->meter->type->getUnit()->getLabel()}";
                     })
                     ->color('primary'),
             ])

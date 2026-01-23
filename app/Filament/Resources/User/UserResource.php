@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\User;
 
-use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;

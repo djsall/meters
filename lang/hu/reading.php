@@ -6,10 +6,16 @@ return [
     'value' => 'Érték',
     'date' => 'Dátum',
     'difference' => 'Előzőhöz képest',
-    'average_consumption' => 'Átlagos havi fogyasztás idén',
-    'average_consumption_last_year' => 'Átlagos havi fogyasztás tavaly',
-    'average_daily_consumption_this_month' => 'Átlagos napi fogyasztás ebben a hónapban',
-    'average_daily_consumption_previous_month' => 'Átlagos napi fogyasztás az előző a hónapban',
+    'average_consumption' => [
+        'yearly' => [
+            'current' => 'Átlagos havi fogyasztás idén',
+            'previous' => 'Átlagos havi fogyasztás tavaly',
+        ],
+        'monthly' => [
+            'current' => 'Átlagos napi fogyasztás ebben a hónapban',
+            'previous' => 'Átlagos napi fogyasztás az előző a hónapban',
+        ],
+    ],
     'daily_avg' => 'Napi átlag',
     'filter' => [
         'current_year' => 'Idén',

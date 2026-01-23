@@ -83,7 +83,7 @@ class ReadingResource extends Resource
                 Tables\Filters\Filter::make('current_year')
                     ->label(__('reading.filter.current_year'))
                     ->default()
-                    ->query(static fn (Builder $query): Builder => $query->year()),
+                    ->query(static fn (Builder $query): Builder => $query->whereYear('date', today()->year)),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()

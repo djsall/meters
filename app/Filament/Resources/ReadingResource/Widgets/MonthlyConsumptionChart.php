@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ReadingResource\Widgets;
 
 use App\Models\Meter;
-use App\Models\Reading;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
@@ -70,7 +69,7 @@ class MonthlyConsumptionChart extends ChartWidget
 
         $data =
             Trend::query(
-                Reading::query()->tenant()
+                $this->meter->readings()
             )
                 ->dateColumn('date')
                 ->between(

@@ -58,8 +58,8 @@ class AverageConsumption extends BaseWidget
     protected function getDailyAveragePreviousMonth(): Stat
     {
         $readings = $this->meter->readings()
-            ->whereDate('date', '=<', today()->subMonth()->startOfMonth())
-            ->whereDate('date', '>=', today()->subMonth()->endOfMonth())
+            ->whereDate('date', '>=', today()->subMonth()->startOfMonth())
+            ->whereDate('date', '<=', today()->subMonth()->endOfMonth())
             ->orderBy('date')
             ->get();
 
@@ -75,8 +75,8 @@ class AverageConsumption extends BaseWidget
     protected function getPreviousYearMonthlyAverage(): Stat
     {
         $readings = $this->meter->readings()
-            ->whereDate('date', '=<', today()->subYear()->startOfYear())
-            ->whereDate('date', '>=', today()->subYear()->endOfYear())
+            ->whereDate('date', '>=', today()->subYear()->startOfYear())
+            ->whereDate('date', '<=', today()->subYear()->endOfYear())
             ->orderBy('date')
             ->get();
 

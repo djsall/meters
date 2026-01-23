@@ -69,7 +69,7 @@ class MonthlyConsumptionChart extends ChartWidget
 
         $data =
             Trend::query(
-                $this->meter->readings()
+                $this->meter->readings()->getQuery()
             )
                 ->dateColumn('date')
                 ->between(

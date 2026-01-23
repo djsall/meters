@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Reading;
 use App\Models\Reading;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Forms;
@@ -37,10 +36,12 @@ class ReadingResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('value')
                     ->label(__('reading.value'))
+                    ->required()
                     ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
                     ->numeric(),
                 Forms\Components\DateTimePicker::make('date')
                     ->label(__('reading.date'))
+                    ->required()
                     ->displayFormat('Y.m.d H:i')
                     ->native(false)
                     ->seconds(false)
@@ -72,15 +73,15 @@ class ReadingResource extends Resource
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->label(__('reading.value'))
                     ->sortable(),
-                Tables\Columns\TextColumn::make('date')
-                    ->dateTime(format: 'Y.m.d H:i')
-                    ->label(__('reading.date'))
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
                     ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
                     ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
+                Tables\Columns\TextColumn::make('date')
+                    ->dateTime(format: 'Y.m.d H:i')
+                    ->label(__('reading.date'))
+                    ->sortable(),
             ])
             ->defaultPaginationPageOption(25)
             ->filters([
@@ -88,17 +89,15 @@ class ReadingResource extends Resource
                     ->label(__('reading.filter.current_year'))
                     ->default()
                     ->query(static fn (Builder $query): Builder => $query->whereYear('date', today()->year)),
-            ])
+            ], Tables\Enums\FiltersLayout::AboveContent)
             ->recordActions([
                 EditAction::make()
+                    ->iconButton()
                     ->extraModalFooterActions([
                         DeleteAction::make(),
                     ]),
             ])
-            ->defaultSort('date')
-            ->toolbarActions([
-                DeleteBulkAction::make(),
-            ]);
+            ->defaultSort('date');
     }
 
     public static function getPages(): array

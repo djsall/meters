@@ -5,8 +5,7 @@ return [
     'pluralLabel' => 'óraállások',
     'value' => 'Érték',
     'date' => 'Dátum',
-    'created_at' => 'Létrehozva',
-    'difference' => 'Előzőhöz képest',
+    'difference' => 'Fogyasztás',
     'average_consumption' => [
         'yearly' => [
             'current' => 'Átlagos havi fogyasztás idén',

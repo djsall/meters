@@ -5,8 +5,7 @@ return [
     'pluralLabel' => 'readings',
     'value' => 'Value',
     'date' => 'Date',
-    'created_at' => 'Created at',
-    'difference' => 'Difference to previous',
+    'difference' => 'Consumption',
     'average_consumption' => [
         'yearly' => [
             'current' => 'Average monthly consumption this year',

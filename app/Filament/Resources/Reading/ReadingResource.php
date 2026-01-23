@@ -39,9 +39,12 @@ class ReadingResource extends Resource
                     ->label(__('reading.value'))
                     ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
                     ->numeric(),
-                Forms\Components\DatePicker::make('date')
+                Forms\Components\DateTimePicker::make('date')
                     ->label(__('reading.date'))
-                    ->default(today()),
+                    ->displayFormat('Y.m.d H:i')
+                    ->native(false)
+                    ->seconds(false)
+                    ->default(now()),
             ])
             ->columns(1);
     }
@@ -70,7 +73,7 @@ class ReadingResource extends Resource
                     ->label(__('reading.value'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('date')
-                    ->date(format: 'Y.m.d')
+                    ->dateTime(format: 'Y.m.d H:i')
                     ->label(__('reading.date'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
@@ -78,10 +81,6 @@ class ReadingResource extends Resource
                     ->label(__('reading.difference'))
                     ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->date(format: 'Y.m.d H:i')
-                    ->label(__('reading.created_at'))
-                    ->sortable(),
             ])
             ->defaultPaginationPageOption(25)
             ->filters([

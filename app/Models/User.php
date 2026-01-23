@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -22,11 +21,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 {
     use HasApiTokens, HasFactory, HasJsonRelationships, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -35,33 +29,24 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         'last_notified',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-        'last_notified' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'last_notified' => 'datetime',
+        ];
+    }
 
     #[Scope]
     public function hasOverdueMeters(Builder $builder): Builder
     {
-        return $builder
-            ->has('overdueMeters')
-            ->orHas('overdueSharedMeters');
+        return $builder->has('overdueMeters')->orHas('overdueSharedMeters');
     }
 
     public function meters(): HasMany
@@ -71,8 +56,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function overdueMeters(): HasMany
     {
-        return $this
-            ->meters()
+        return $this->meters()
             ->whereDoesntHave('readings', function (Builder $query) {
                 $query->whereDate('date', '>', today()->subMonth());
             });
@@ -85,8 +69,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function overdueSharedMeters(): HasMany
     {
-        return $this
-            ->sharedMeters()
+        return $this->sharedMeters()
             ->whereDoesntHave('readings', function (Builder $query) {
                 $query->whereDate('date', '>', today()->subMonth());
             });

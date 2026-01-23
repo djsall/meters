@@ -2,11 +2,14 @@
 
 namespace App\Filament\Resources\ReadingResource\Widgets;
 
+use App\Models\Meter;
 use App\Models\Reading;
+use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 class MonthlyConsumptionChart extends ChartWidget
@@ -28,28 +31,42 @@ class MonthlyConsumptionChart extends ChartWidget
         ];
     }
 
+    protected Meter $meter {
+        get {
+            return Filament::getTenant();
+        }
+    }
+
+    protected array $dateRange {
+        get {
+            return match ($this->filter) {
+                'current_year' => [now()->startOfYear(), now()->endOfYear()],
+                'previous_year' => [now()->subYear()->startOfYear(), now()->subYear()->endOfYear()],
+            };
+        }
+    }
+
+    protected Collection $readings {
+        get {
+            return $this->meter->readings()->latest('date')->whereBetween('date', $this->dateRange)->get();
+        }
+    }
+
     protected static ?string $maxHeight = '200px';
 
     protected int|string|array $columnSpan = 2;
 
     protected function getData(): array
     {
-        $between = match ($this->filter) {
-            'current_year' => ['start' => now()->startOfYear(), 'end' => now()->endOfYear()],
-            'previous_year' => ['start' => now()->subYear()->startOfYear(), 'end' => now()->subYear()->endOfYear()],
-        };
+        $first = $this->meter->firstReadingThisYear?->value;
 
-        $first = Reading::firstOfYear($between['start']->format('Y'))?->value;
-
-        $previous =
-            static fn ($date): int => Reading::query()
-                ->tenant()
-                ->whereBetween('date', [
-                    Carbon::parse($date)->subMonth()->startOfMonth(),
-                    Carbon::parse($date)->subMonth()->endOfMonth(),
-                ])
-                ->first()
-                ?->value ?? 0;
+        $previous = static fn ($date): int => $this->readings
+            ->whereBetween('date', [
+                Carbon::parse($date)->subMonth()->startOfMonth(),
+                Carbon::parse($date)->subMonth()->endOfMonth(),
+            ])
+            ->first()
+            ?->value ?? 0;
 
         $data =
             Trend::query(
@@ -57,8 +74,8 @@ class MonthlyConsumptionChart extends ChartWidget
             )
                 ->dateColumn('date')
                 ->between(
-                    start: $between['start'],
-                    end: $between['end'],
+                    start: $this->dateRange[0],
+                    end: $this->dateRange[1],
                 )
                 ->perMonth()
                 ->average('value');

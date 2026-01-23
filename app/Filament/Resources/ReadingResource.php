@@ -72,7 +72,7 @@ class ReadingResource extends Resource
                     ->label(__('reading.difference'))
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->getStateUsing(function (Reading $record) {
-                        $previous_reading = $record->previous;
+                        $previous_reading = $record->previousReading;
 
                         if (! $previous_reading) {
                             return null;

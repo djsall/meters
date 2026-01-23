@@ -26,11 +26,14 @@ class Meter extends Model
         'user_id',
     ];
 
-    protected $casts = [
-        'type' => MeterType::class,
-        'settings' => 'array',
-        'shared_users' => 'json',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'type' => MeterType::class,
+            'settings' => 'array',
+            'shared_users' => 'json',
+        ];
+    }
 
     #[Scope]
     public function noRecentReadings(Builder $builder): Builder
@@ -46,7 +49,23 @@ class Meter extends Model
         return $this->hasMany(Reading::class);
     }
 
-    public function latestReading(): HasOne
+    public function firstReadingThisYear(): HasOne
+    {
+        return $this->readings()
+            ->oldest('date')
+            ->whereDate('date', '>=', today()->subYear()->startOfYear())
+            ->one();
+    }
+
+    public function firstReadingThisMonth(): HasOne
+    {
+        return $this->readings()
+            ->oldest('date')
+            ->whereDate('date', '>=', today()->startOfMonth())
+            ->one();
+    }
+
+    public function lastReading(): HasOne
     {
         return $this->readings()->latest('date')->one();
     }

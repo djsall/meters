@@ -2,11 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\MeasurmentUnit;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,31 +17,11 @@ class Reading extends Model
         'meter_id', 'value', 'date',
     ];
 
-    protected $casts = [
-        'date' => 'date',
-    ];
-
-    public function previousMonth(): Attribute
+    protected function casts(): array
     {
-        return Attribute::get(
-            fn (): ?Reading => self::query()
-                ->latest('date')
-                ->where('meter_id', $this->meter_id)
-                ->whereDate('date', '<', $this->date->startOfMonth())
-                ->whereDate('date', '>', $this->date->subMonth()->startOfMonth())
-                ->first()
-        );
-    }
-
-    public function previous(): Attribute
-    {
-        return Attribute::get(
-            fn (): ?Reading => self::query()
-                ->latest('date')
-                ->where('meter_id', $this->meter_id)
-                ->whereDate('date', '<', $this->date)
-                ->first()
-        );
+        return [
+            'date' => 'date',
+        ];
     }
 
     #[Scope]
@@ -65,26 +43,10 @@ class Reading extends Model
         return $this->belongsTo(Meter::class);
     }
 
-    public function unit(): Attribute
-    {
-        return Attribute::get(
-            fn (): MeasurmentUnit => $this->meter->type->getUnit()
-        );
-    }
-
     public static function firstOfYear(?int $year = null): ?self
     {
         return self::query()
             ->oldest('date')
-            ->tenant()
-            ->year($year)
-            ->first();
-    }
-
-    public static function lastOfYear(?int $year = null): ?self
-    {
-        return self::query()
-            ->latest('date')
             ->tenant()
             ->year($year)
             ->first();

@@ -69,13 +69,13 @@ class ReadingResource extends Resource
             })
             ->columns([
                 Tables\Columns\TextColumn::make('value')
-                    ->numeric(thousandsSeparator: ' ')
+                    ->numeric(1, '.', ' ')
                     ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->label(__('reading.value'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')
-                    ->numeric(thousandsSeparator: ' ')
                     ->label(__('reading.difference'))
+                    ->numeric(1, '.', ' ')
                     ->suffix(static fn (Reading $record): string => str($record->meter->type->getUnit()->getLabel())->prepend(' '))
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('date')

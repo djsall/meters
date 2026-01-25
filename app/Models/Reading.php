@@ -17,6 +17,7 @@ class Reading extends Model
     protected function casts(): array
     {
         return [
+            'value' => 'float',
             'date' => 'datetime',
         ];
     }

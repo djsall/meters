@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
+use App\Models\Reading;
 use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
@@ -43,63 +44,102 @@ class MonthlyConsumptionChart extends ChartWidget
     protected array $dateRange {
         get {
             return match ($this->filter) {
-                'current_year' => [now()->startOfYear(), now()->endOfYear()],
-                'previous_year' => [now()->subYear()->startOfYear(), now()->subYear()->endOfYear()],
+                'current_year' => [today()->startOfYear(), today()->endOfYear()],
+                'previous_year' => [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()],
             };
-        }
-    }
-
-    protected Collection $readings {
-        get {
-            return $this->meter->readings()->latest('date')->whereBetween('date', $this->dateRange)->get();
         }
     }
 
     protected function getData(): array
     {
-        $first = $this->meter->firstReadingThisYear?->value;
+        [$startOfYear, $endOfYear] = $this->dateRange;
 
-        $previous = fn ($date): int => $this->readings
-            ->whereBetween('date', [
-                Carbon::parse($date)->subMonth()->startOfMonth(),
-                Carbon::parse($date)->subMonth()->endOfMonth(),
-            ])
-            ->first()
-            ?->value ?? 0;
+        // 1. Fetch Boundary Readings (Anchors)
+        $readingBeforeRange = $this->meter->readings()
+            ->where('date', '<', $startOfYear)
+            ->latest('date')
+            ->limit(1)
+            ->first();
 
-        $data =
-            Trend::query(
-                $this->meter->readings()->getQuery()
-            )
-                ->dateColumn('date')
-                ->between(
-                    start: $this->dateRange[0],
-                    end: $this->dateRange[1],
-                )
-                ->perMonth()
-                ->average('value');
+        $readingAfterRange = $this->meter->readings()
+            ->where('date', '>', $endOfYear)
+            ->oldest('date')
+            ->limit(1)
+            ->first();
+
+        // 2. Fetch all readings within the year
+        $yearReadings = $this->meter->readings()
+            ->whereBetween('date', [$startOfYear, $endOfYear])
+            ->orderBy('date', 'asc')
+            ->get();
+
+        // Merge everything into one collection for easy searching
+        $allRelevantReadings = collect([$readingBeforeRange, ...$yearReadings, $readingAfterRange])
+            ->filter()
+            ->values();
+
+        // 3. Define our monthly timeline
+        $monthPeriods = Trend::query($this->meter->readings()->getQuery())
+            ->between($startOfYear, $endOfYear)
+            ->dateColumn('date')
+            ->perMonth()
+            ->count('value')
+            ->map(fn (TrendValue $trendValue) => Carbon::parse($trendValue->date));
+
+        $monthlyValues = [];
+        $isEstimated = [];
+
+        foreach ($monthPeriods as $month) {
+            $targetDate = $month->endOfMonth();
+
+            // Check if a real reading exists exactly in this month
+            $hasRealReading = $yearReadings->contains(fn (Reading $reading): bool => $reading->date->isSameMonth($month));
+
+            $beforeReading = $allRelevantReadings->last(fn (Reading $reading): bool => $reading->date <= $targetDate);
+            $afterReading = $allRelevantReadings->first(fn (Reading $reading): bool => $reading->date > $targetDate);
+
+            if ($beforeReading && $afterReading) {
+                $totalDaysBetween = $beforeReading->date->diffInDays($afterReading->date);
+                $daysSinceBefore = $beforeReading->date->diffInDays($targetDate);
+                $totalValueChange = $afterReading->value - $beforeReading->value;
+
+                $slope = $totalValueChange / max(1, $totalDaysBetween);
+                $interpolatedValue = $beforeReading->value + ($daysSinceBefore * $slope);
+
+                $monthlyValues[$month->format('M')] = $interpolatedValue;
+                $isEstimated[] = ! $hasRealReading;
+            } else {
+                $monthlyValues[$month->format('M')] = $beforeReading?->value ?? 0;
+                $isEstimated[] = true;
+            }
+        }
+
+        // 4. Calculate Final Consumption (Deltas) and Colors
+        $finalConsumptionData = [];
+        $backgroundColors = [];
+        $monthKeys = array_keys($monthlyValues);
+
+        foreach ($monthKeys as $index => $monthName) {
+            $currentValue = $monthlyValues[$monthName];
+            $previousValue = ($index === 0)
+                ? ($readingBeforeRange?->value ?? 0)
+                : $monthlyValues[$monthKeys[$index - 1]];
+
+            $finalConsumptionData[] = max(0, $currentValue - $previousValue);
+
+            $backgroundColors[] = $isEstimated[$index] ? 'transparent' : 'primary';
+        }
 
         return [
             'datasets' => [
                 [
                     'label' => __('charts.monthly_consumption.label'),
-                    'data' => $data
-                        ->map(static function (TrendValue $value) use ($first, $previous): ?int {
-                            if ($value->aggregate > 0) {
-                                $previous = $previous($value->date);
-
-                                if ($previous === 0) {
-                                    return $value->aggregate - $first;
-                                }
-
-                                return $value->aggregate - $previous;
-                            }
-
-                            return null;
-                        }),
+                    'data' => $finalConsumptionData,
+                    'backgroundColor' => $backgroundColors,
+                    'borderRadius' => 4,
                 ],
             ],
-            'labels' => $data->map(static fn (TrendValue $value) => $value->date),
+            'labels' => $monthPeriods->map(fn ($month) => $month->format('Y. M')),
         ];
     }
 

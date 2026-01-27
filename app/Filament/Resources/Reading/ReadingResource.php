@@ -92,10 +92,9 @@ class ReadingResource extends Resource
             ], Tables\Enums\FiltersLayout::AboveContent)
             ->recordActions([
                 EditAction::make()
-                    ->iconButton()
-                    ->extraModalFooterActions([
-                        DeleteAction::make(),
-                    ]),
+                    ->iconButton(),
+                DeleteAction::make()
+                    ->iconButton(),
             ])
             ->defaultSort('date');
     }

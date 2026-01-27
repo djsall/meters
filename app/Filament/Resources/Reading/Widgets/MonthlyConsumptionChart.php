@@ -126,7 +126,7 @@ class MonthlyConsumptionChart extends ChartWidget
                 : $monthlyValues[$monthKeys[$index - 1]];
 
             $consumption = max(0, $currentValue - $previousValue);
-            $finalConsumptionData[] = number_format(round($consumption));
+            $finalConsumptionData[] = round($consumption);
 
             $backgroundColors[] = $isEstimated[$index] ? 'transparent' : 'primary';
         }

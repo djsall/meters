@@ -39,13 +39,9 @@ class RateService
             return null;
         }
 
-        $days = $earliest?->date->diffInDays($latest?->date);
-        $delta = $latest?->value - $earliest?->value;
+        $days = $earliest->date->diffInDays($latest->date);
+        $delta = $latest->value - $earliest->value;
 
-        if ($days == 0 || $delta <= 0) {
-            return null;
-        }
-
-        return $delta / $days;
+        return $delta > 0 ? $delta / $days : null;
     }
 }

@@ -104,7 +104,7 @@ class MonthlyConsumptionChart extends ChartWidget
                 $totalValueChange = $afterReading->value - $beforeReading->value;
 
                 $slope = $totalValueChange / max(1, $totalDaysBetween);
-                $interpolatedValue = $beforeReading->value + ($daysSinceBefore * $slope);
+                $interpolatedValue = $beforeReading->value + ($daysSinceBefore * round($slope));
 
                 $monthlyValues[$month->format('M')] = $interpolatedValue;
                 $isEstimated[] = ! $hasRealReading;
@@ -125,7 +125,8 @@ class MonthlyConsumptionChart extends ChartWidget
                 ? ($readingBeforeRange?->value ?? 0)
                 : $monthlyValues[$monthKeys[$index - 1]];
 
-            $finalConsumptionData[] = max(0, $currentValue - $previousValue);
+            $consumption = max(0, $currentValue - $previousValue);
+            $finalConsumptionData[] = number_format(round($consumption));
 
             $backgroundColors[] = $isEstimated[$index] ? 'transparent' : 'primary';
         }

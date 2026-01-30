@@ -43,8 +43,8 @@ class AverageConsumption extends BaseWidget
     protected function getDailyAverage(): Stat
     {
         $value = $this->service->getAverageDailyConsumption(
-            start: today()->startOfMonth(),
-            end: today(),
+            startDate: today()->startOfMonth(),
+            endDate: today(),
         );
 
         return $this->makeStat(__('reading.average_consumption.monthly.current'), $value);
@@ -53,8 +53,8 @@ class AverageConsumption extends BaseWidget
     protected function getCurrentYearMonthlyAverage(): Stat
     {
         $value = $this->service->getAverageDailyConsumption(
-            start: today()->startOfYear(),
-            end: today()
+            startDate: today()->startOfYear(),
+            endDate: today()
         );
 
         if ($value !== null) {
@@ -67,8 +67,8 @@ class AverageConsumption extends BaseWidget
     protected function getDailyAveragePreviousMonth(): Stat
     {
         $value = $this->service->getAverageDailyConsumption(
-            start: today()->subMonth()->startOfMonth(),
-            end: today()->subMonth()->endOfMonth()
+            startDate: today()->subMonth()->startOfMonth(),
+            endDate: today()->subMonth()->endOfMonth()
         );
 
         return $this->makeStat(__('reading.average_consumption.monthly.previous'), $value);
@@ -77,8 +77,8 @@ class AverageConsumption extends BaseWidget
     protected function getPreviousYearMonthlyAverage(): Stat
     {
         $value = $this->service->getAverageDailyConsumption(
-            start: today()->subYear()->startOfYear(),
-            end: today()->subYear()->endOfYear()
+            startDate: today()->subYear()->startOfYear(),
+            endDate: today()->subYear()->endOfYear()
         );
 
         if ($value !== null) {

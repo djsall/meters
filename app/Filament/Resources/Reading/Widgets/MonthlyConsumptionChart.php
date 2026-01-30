@@ -39,18 +39,12 @@ class MonthlyConsumptionChart extends ChartWidget
         }
     }
 
-    protected array $dateRange {
-        get {
-            return match ($this->filter) {
-                'current_year' => [today()->startOfYear(), today()->endOfYear()],
-                'previous_year' => [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()],
-            };
-        }
-    }
-
     protected function getData(): array
     {
-        [$start, $end] = $this->dateRange;
+        [$start, $end] = match ($this->filter) {
+            'current_year' => [today()->startOfYear(), today()->endOfYear()],
+            'previous_year' => [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()],
+        };
 
         $readings = $this->getRelevantReadings($start, $end);
         $months = $this->getMonthlyPeriods($start, $end);

@@ -13,13 +13,13 @@ it('calculates the average daily rate across a missing gap', function () {
     Reading::factory()->create([
         'meter_id' => $meter->id,
         'value' => 100,
-        'date' => Carbon::now()->subDays(15),
+        'date' => Carbon::now(),
     ]);
 
     Reading::factory()->create([
         'meter_id' => $meter->id,
         'value' => 160,
-        'date' => Carbon::now()->addDays(15),
+        'date' => Carbon::now()->addDays(30),
     ]);
 
     // 3. Initialize Service for a range inside that gap
@@ -28,7 +28,7 @@ it('calculates the average daily rate across a missing gap', function () {
     // 4. Assert
     // Total change: 60. Total days: 30. Rate: 2.0
     expect(
-        $service->getEstimatedRate(
+        $service->getRateForRange(
             Carbon::now()->subDays(2),
             Carbon::now()->addDays(2)
         )
@@ -44,7 +44,7 @@ it('returns null when insufficient readings exist', function () {
     $service = new RateService($meter);
 
     expect(
-        $service->getEstimatedRate(
+        $service->getRateForRange(
             Carbon::now(),
             Carbon::now()->addDay()
         )
@@ -64,5 +64,5 @@ it('handles same-day readings to prevent division by zero', function () {
     $service = new RateService($meter);
 
     // Should return 0 rather than crashing
-    expect($service->getEstimatedRate($date, $date))->toBeNull();
+    expect($service->getRateForRange($date, $date))->toBeNull();
 });

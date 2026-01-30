@@ -42,7 +42,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAverage(): Stat
     {
-        $value = $this->service->getEstimatedRate(
+        $value = $this->service->getRateForRange(
             start: today()->startOfMonth(),
             end: today(),
         );
@@ -52,7 +52,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getCurrentYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getEstimatedRate(
+        $value = $this->service->getRateForRange(
             start: today()->startOfYear(),
             end: today()
         );
@@ -66,7 +66,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAveragePreviousMonth(): Stat
     {
-        $value = $this->service->getEstimatedRate(
+        $value = $this->service->getRateForRange(
             start: today()->subMonth()->startOfMonth(),
             end: today()->subMonth()->endOfMonth()
         );
@@ -76,7 +76,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getPreviousYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getEstimatedRate(
+        $value = $this->service->getRateForRange(
             start: today()->subYear()->startOfYear(),
             end: today()->subYear()->endOfYear()
         );

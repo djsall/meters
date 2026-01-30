@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
-use App\Services\RateService;
+use App\Services\InterpolatedConsumptionService;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -12,7 +12,7 @@ class AverageConsumption extends BaseWidget
 {
     protected string $defaultValue = '-';
 
-    protected RateService $service;
+    protected InterpolatedConsumptionService $service;
 
     protected function getColumns(): int
     {
@@ -27,7 +27,7 @@ class AverageConsumption extends BaseWidget
 
     public function __construct()
     {
-        $this->service = new RateService($this->meter);
+        $this->service = new InterpolatedConsumptionService($this->meter);
     }
 
     protected function getStats(): array
@@ -42,7 +42,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAverage(): Stat
     {
-        $value = $this->service->getRateForRange(
+        $value = $this->service->getAverageDailyConsumption(
             start: today()->startOfMonth(),
             end: today(),
         );
@@ -52,7 +52,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getCurrentYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getRateForRange(
+        $value = $this->service->getAverageDailyConsumption(
             start: today()->startOfYear(),
             end: today()
         );
@@ -66,7 +66,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAveragePreviousMonth(): Stat
     {
-        $value = $this->service->getRateForRange(
+        $value = $this->service->getAverageDailyConsumption(
             start: today()->subMonth()->startOfMonth(),
             end: today()->subMonth()->endOfMonth()
         );
@@ -76,7 +76,7 @@ class AverageConsumption extends BaseWidget
 
     protected function getPreviousYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getRateForRange(
+        $value = $this->service->getAverageDailyConsumption(
             start: today()->subYear()->startOfYear(),
             end: today()->subYear()->endOfYear()
         );

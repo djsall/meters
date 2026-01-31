@@ -7,10 +7,14 @@ use App\Services\InterpolatedConsumptionService;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class AverageConsumption extends BaseWidget
 {
     protected string $defaultValue = '-';
+
+    protected ?string $pollingInterval = null;
 
     protected InterpolatedConsumptionService $service;
 
@@ -42,50 +46,76 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAverage(): Stat
     {
-        $value = $this->service->getAverageDailyConsumption(
-            startDate: today()->startOfMonth(),
-            endDate: today(),
-        );
+        [$start, $end] = [today()->startOfMonth(), today()->endOfMonth()];
 
-        return $this->makeStat(__('reading.average_consumption.monthly.current'), $value);
+        $value = $this->service->getAverageDailyConsumption($start, $end);
+
+        $chart = $this->cacheDailyConsumption('current_month', $start, $end);
+
+        return $this->makeStat(__('reading.average_consumption.monthly.current'), $value)->chart($chart)->chartColor('primary');
     }
 
     protected function getCurrentYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getAverageDailyConsumption(
-            startDate: today()->startOfYear(),
-            endDate: today()
-        );
+        [$start, $end] = [today()->startOfYear(), today()->endOfYear()];
+
+        $value = $this->service->getAverageDailyConsumption($start, $end);
 
         if ($value !== null) {
             $value *= 30.44;
         }
 
-        return $this->makeStat(__('reading.average_consumption.yearly.current'), $value);
+        $chart = $this->cacheMonthlyConsumption('current_year', $start, $end);
+
+        return $this->makeStat(__('reading.average_consumption.yearly.current'), $value)->chart($chart)->chartColor('primary');
     }
 
     protected function getDailyAveragePreviousMonth(): Stat
     {
-        $value = $this->service->getAverageDailyConsumption(
-            startDate: today()->subMonth()->startOfMonth(),
-            endDate: today()->subMonth()->endOfMonth()
-        );
+        [$start, $end] = [today()->subMonth()->startOfMonth(), today()->subMonth()->endOfMonth()];
 
-        return $this->makeStat(__('reading.average_consumption.monthly.previous'), $value);
+        $value = $this->service->getAverageDailyConsumption($start, $end);
+
+        $chart = $this->cacheDailyConsumption('previous_month', $start, $end);
+
+        return $this->makeStat(__('reading.average_consumption.monthly.previous'), $value)->chart($chart);
     }
 
     protected function getPreviousYearMonthlyAverage(): Stat
     {
-        $value = $this->service->getAverageDailyConsumption(
-            startDate: today()->subYear()->startOfYear(),
-            endDate: today()->subYear()->endOfYear()
-        );
+        [$start, $end] = [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()];
+
+        $value = $this->service->getAverageDailyConsumption($start, $end);
 
         if ($value !== null) {
             $value *= 30.44;
         }
 
-        return $this->makeStat(__('reading.average_consumption.yearly.previous'), $value);
+        $chart = $this->cacheMonthlyConsumption('previous_year', $start, $end);
+
+        return $this->makeStat(__('reading.average_consumption.yearly.previous'), $value)->chart($chart);
+    }
+
+    protected function cacheDailyConsumption(string $key, Carbon $start, Carbon $end): array
+    {
+        $dailyConsumption = Cache::remember(
+            "{$key}_daily_consumption_{$this->meter->id}",
+            60,
+            fn () => $this->service->getDailyConsumption($start, $end)
+        );
+
+        return data_get($dailyConsumption, '*.consumption');
+    }
+
+    protected function cacheMonthlyConsumption(string $key, Carbon $start, Carbon $end): array
+    {
+        $monthlyConsumption = Cache::remember(
+            "{$key}_monthly_consumption_{$this->meter->id}",
+            60,
+            fn () => $this->service->getMonthlyConsumption($start, $end)
+        );
+
+        return data_get($monthlyConsumption, '*.consumption');
     }
 
     protected function makeStat(string $title, ?float $value): Stat

@@ -50,6 +50,39 @@ readonly class InterpolatedConsumptionService
     }
 
     /**
+     * Calculates daily consumption. Returns null for consumption
+     * if interpolation is not possible.
+     */
+    public function getDailyConsumption(CarbonInterface $rangeStart, CarbonInterface $rangeEnd): Collection
+    {
+        $readings = $this->getRelevantReadings($rangeStart, $rangeEnd);
+        $days = collect($rangeStart->copy()->startOfMonth()->daysUntil($rangeEnd))->values();
+
+        $results = collect();
+        $previousValue = $this->interpolate($readings, $rangeStart);
+
+        foreach ($days as $dayStart) {
+            $dayEnd = $dayStart->copy()->endOfDay();
+            $currentValue = $this->interpolate($readings, $dayEnd);
+
+            $consumption = null;
+            if ($previousValue !== null && $currentValue !== null) {
+                $consumption = round($currentValue - $previousValue);
+            }
+
+            $results->push([
+                'day' => $dayStart,
+                'consumption' => $consumption,
+                'is_estimated' => ! $this->hasReadingInDay($readings, $dayStart),
+            ]);
+
+            $previousValue = $currentValue;
+        }
+
+        return $results;
+    }
+
+    /**
      * Calculates the average daily usage. Returns null if no readings are available.
      */
     public function getAverageDailyConsumption(CarbonInterface $startDate, CarbonInterface $endDate): ?float
@@ -146,6 +179,11 @@ readonly class InterpolatedConsumptionService
     private function hasReadingInMonth(Collection $readings, CarbonInterface $month): bool
     {
         return $readings->contains(fn (Reading $reading) => $reading->date->isSameMonth($month));
+    }
+
+    private function hasReadingInDay(Collection $readings, CarbonInterface $day): bool
+    {
+        return $readings->contains(fn (Reading $reading) => $reading->date->isSameDay($day));
     }
 
     private function getRelevantReadings(CarbonInterface $start, CarbonInterface $end): Collection

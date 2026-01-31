@@ -73,6 +73,10 @@ readonly class InterpolatedConsumptionService
         $totalConsumption = $endValue - $startValue;
         $totalDays = $effectiveStart->diffInDays($effectiveEnd);
 
+        if ($totalDays < 1) {
+            return null;
+        }
+
         return $totalConsumption / $totalDays;
     }
 

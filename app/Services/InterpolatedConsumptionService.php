@@ -34,7 +34,7 @@ readonly class InterpolatedConsumptionService
 
             $consumption = null;
             if ($previousValue !== null && $currentValue !== null) {
-                $consumption = round(max(0, $currentValue - $previousValue));
+                $consumption = round($currentValue - $previousValue);
             }
 
             $results->push([
@@ -70,8 +70,8 @@ readonly class InterpolatedConsumptionService
             return null;
         }
 
-        $totalConsumption = max(0, $endValue - $startValue);
-        $totalDays = max(1, $effectiveStart->diffInDays($effectiveEnd));
+        $totalConsumption = $endValue - $startValue;
+        $totalDays = $effectiveStart->diffInDays($effectiveEnd);
 
         return $totalConsumption / $totalDays;
     }

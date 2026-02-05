@@ -10,7 +10,7 @@ enum MeterType: string implements HasLabel
     case Gas = 'gas';
     case Water = 'water';
 
-    public function getLabel(): ?string
+    public function getLabel(): string
     {
         return match ($this) {
             MeterType::Electricity => __('meter.electricity'),

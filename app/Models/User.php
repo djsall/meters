@@ -5,18 +5,23 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
 use Staudenmeir\EloquentJsonRelations\Relations\HasManyJson;
 
+/**
+ * @property-read Collection<Meter> $meters
+ * @property-read Collection<Meter> $overdueMeters
+ * @property-read Collection<Meter> $sharedMeters
+ * @property-read Collection<Meter> $overdueSharedMeters
+ */
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     use HasApiTokens, HasFactory, HasJsonRelationships, Notifiable;
@@ -41,12 +46,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants
             'password' => 'hashed',
             'last_notified' => 'datetime',
         ];
-    }
-
-    #[Scope]
-    public function hasOverdueMeters(Builder $builder): Builder
-    {
-        return $builder->has('overdueMeters')->orHas('overdueSharedMeters');
     }
 
     public function meters(): HasMany

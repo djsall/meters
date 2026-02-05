@@ -23,7 +23,7 @@ trait HasMeterForm
                 ->label(__('meter.description')),
             Forms\Components\Select::make('shared_users')
                 ->label(__('meter.shared_with'))
-                ->options(static fn () => User::all()->except(auth()->user()->id)->pluck('email', 'id'))
+                ->options(static fn () => User::query()->whereKeyNot(auth()->id())->pluck('email', 'id'))
                 ->multiple()
                 ->searchable()
                 ->mutateDehydratedStateUsing(fn ($state) => collect($state)->map(fn ($item) => str($item)->toInteger())->all()),

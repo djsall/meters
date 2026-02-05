@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\Reading;
 
+use App\Models\Meter;
 use App\Models\Reading;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -37,7 +37,7 @@ class ReadingResource extends Resource
                 Forms\Components\TextInput::make('value')
                     ->label(__('reading.value'))
                     ->required()
-                    ->suffix(Filament::getTenant()->type->getUnit()->getLabel())
+                    ->suffix(Meter::getFilamentTenant()->type->getUnit()->getLabel())
                     ->numeric(),
                 Forms\Components\DateTimePicker::make('date')
                     ->label(__('reading.date'))
@@ -70,7 +70,7 @@ class ReadingResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(1, '.', ' ')
-                    ->suffix(str(Filament::getTenant()->type->getUnit()->getLabel())->prepend(' '))
+                    ->suffix(str(Meter::getFilamentTenant()->type->getUnit()->getLabel())->prepend(' '))
                     ->label(__('reading.value'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('difference')

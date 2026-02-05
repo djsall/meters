@@ -15,7 +15,11 @@ class NotifyMissedReading extends Command
     {
         User::query()
             ->with(['overdueMeters', 'overdueSharedMeters'])
-            ->hasOverdueMeters()
+            ->where(function (Builder $query): Builder {
+                return $query
+                    ->has('overdueMeters')
+                    ->orHas('overdueSharedMeters');
+            })
             ->where(function (Builder $query): Builder {
                 return $query
                     ->whereDate('last_notified', '<', today()->subMonth())

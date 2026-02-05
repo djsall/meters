@@ -4,7 +4,6 @@ namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
 use App\Services\InterpolatedConsumptionService;
-use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -25,7 +24,7 @@ class AverageConsumption extends BaseWidget
 
     protected Meter $meter {
         get {
-            return Filament::getTenant();
+            return Meter::getFilamentTenant();
         }
     }
 

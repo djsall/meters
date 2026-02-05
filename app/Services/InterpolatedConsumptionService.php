@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ReadingBoundary;
 use App\Models\Meter;
 use App\Models\Reading;
 use Carbon\CarbonInterface;
@@ -93,8 +94,8 @@ readonly class InterpolatedConsumptionService
             return null;
         }
 
-        $effectiveStart = $this->determineEffectiveBoundary($readings, $startDate, 'start');
-        $effectiveEnd = $this->determineEffectiveBoundary($readings, $endDate, 'end');
+        $effectiveStart = $this->determineEffectiveBoundary($readings, $startDate, ReadingBoundary::Start);
+        $effectiveEnd = $this->determineEffectiveBoundary($readings, $endDate, ReadingBoundary::End);
 
         $startValue = $this->interpolate($readings, $effectiveStart);
         $endValue = $this->interpolate($readings, $effectiveEnd);
@@ -126,12 +127,12 @@ readonly class InterpolatedConsumptionService
         $readingAfter = $readings->first(fn (Reading $reading): bool => $reading->date > $targetDate);
 
         // Cannot interpolate if there is no reading before the target date
-        if (! $readingBefore) {
+        if ($readingBefore == null) {
             return null;
         }
 
         // If no "after" reading exists, we cannot project forward, so return the last known value
-        if (! $readingAfter) {
+        if ($readingAfter == null) {
             return $readingBefore->value;
         }
 
@@ -148,26 +149,26 @@ readonly class InterpolatedConsumptionService
         return $readingBefore->value + ($daysFromBeforeToTarget * $dailySlope);
     }
 
-    private function determineEffectiveBoundary(Collection $readings, CarbonInterface $requestedDate, string $type): CarbonInterface
+    private function determineEffectiveBoundary(Collection $readings, CarbonInterface $requestedDate, ReadingBoundary $type): CarbonInterface
     {
         /**
          * @var Reading $closestReading
          * @var Reading $fallback
          */
         $closestReading = match ($type) {
-            'start' => $readings->first(),
-            'end' => $readings->last(),
+            ReadingBoundary::Start => $readings->first(),
+            ReadingBoundary::End => $readings->last(),
         };
 
         $isOutsideRange = match ($type) {
-            'start' => $closestReading->date->lt($requestedDate),
-            'end' => $closestReading->date->gt($requestedDate),
+            ReadingBoundary::Start => $closestReading->date->lt($requestedDate),
+            ReadingBoundary::End => $closestReading->date->gt($requestedDate),
         };
 
         if ($isOutsideRange && $closestReading->date->diffInDays($requestedDate) > $this->maxGapDays) {
             $fallback = match ($type) {
-                'start' => $readings->first(fn (Reading $reading): bool => $reading->date->gte($requestedDate)),
-                'end' => $readings->last(fn (Reading $reading): bool => $reading->date->lte($requestedDate)),
+                ReadingBoundary::Start => $readings->first(fn (Reading $reading): bool => $reading->date->gte($requestedDate)),
+                ReadingBoundary::End => $readings->last(fn (Reading $reading): bool => $reading->date->lte($requestedDate)),
             };
 
             return $fallback ? $fallback->date : $requestedDate;

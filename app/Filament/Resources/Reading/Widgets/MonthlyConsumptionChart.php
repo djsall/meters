@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Reading\Widgets;
 
+use App\Models\Meter;
 use App\Services\InterpolatedConsumptionService;
-use Filament\Facades\Filament;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
@@ -33,11 +33,13 @@ class MonthlyConsumptionChart extends ChartWidget
 
     protected function getData(): array
     {
-        $service = new InterpolatedConsumptionService($meter = Filament::getTenant());
+        $meter = Meter::getFilamentTenant();
+
+        $service = new InterpolatedConsumptionService($meter);
 
         [$start, $end] = match ($this->filter) {
-            'current_year' => [today()->startOfYear(), today()->endOfYear()],
             'previous_year' => [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()],
+            default => [today()->startOfYear(), today()->endOfYear()],
         };
 
         $results = Cache::remember(

@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Reading\Pages;
 
 use App\Filament\Resources\Reading;
+use App\Models\Meter;
 use Filament\Actions;
-use Filament\Facades\Filament;
 use Filament\Resources\Pages\ManageRecords;
 use Illuminate\Contracts\Support\Htmlable;
 
@@ -22,10 +22,10 @@ class ManageValues extends ManageRecords
 
     public function getTitle(): string|Htmlable
     {
-        $meterName = Filament::getTenant()->name;
+        $meter = Meter::getFilamentTenant();
         $titleString = mb_strtolower(__('reading.pluralLabel'));
 
-        return "{$meterName} {$titleString}";
+        return "{$meter->name} {$titleString}";
     }
 
     public function getHeaderWidgets(): array

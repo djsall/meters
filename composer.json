@@ -1,10 +1,12 @@
 {
-    "name": "laravel/laravel",
+    "name": "djsall/meters",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "An application for logging your energy usage and computing some usage statistics, with shared meter functionality.",
     "keywords": [
         "laravel",
-        "framework"
+        "energy consumption",
+        "energy meters",
+        "collaborative"
     ],
     "license": "MIT",
     "require": {

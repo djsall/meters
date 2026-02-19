@@ -41,7 +41,7 @@ class EditMeter extends EditTenantProfile
                 ->label(__('meter.edit.actions.cancel'))
                 ->color(Color::Gray)
                 ->outlined()
-                ->url(Filament::getUrl(Filament::getTenant())),
+                ->url(static fn (): string => Filament::getUrl(Filament::getTenant())),
         ];
     }
 }

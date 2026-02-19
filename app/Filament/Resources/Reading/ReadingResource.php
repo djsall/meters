@@ -67,7 +67,6 @@ class ReadingResource extends Resource
                     ->select('*')
                     ->selectRaw('value - LAG(value) OVER (ORDER BY date ASC) as difference');
             })
-            ->defaultSort('date', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('value')
                     ->numeric(1, '.', ' ')
@@ -84,6 +83,7 @@ class ReadingResource extends Resource
                     ->label(__('reading.date'))
                     ->sortable(),
             ])
+            ->defaultSort('date', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('current_year')
                     ->label(__('reading.filter.current_year'))
@@ -95,8 +95,7 @@ class ReadingResource extends Resource
                     ->iconButton(),
                 DeleteAction::make()
                     ->iconButton(),
-            ])
-            ->defaultSort('date');
+            ]);
     }
 
     public static function getPages(): array

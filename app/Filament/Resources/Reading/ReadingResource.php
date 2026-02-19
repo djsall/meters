@@ -10,6 +10,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -92,6 +93,7 @@ class ReadingResource extends Resource
             ], Tables\Enums\FiltersLayout::AboveContent)
             ->recordActions([
                 EditAction::make()
+                    ->modalWidth(Width::Large)
                     ->iconButton(),
                 DeleteAction::make()
                     ->iconButton(),

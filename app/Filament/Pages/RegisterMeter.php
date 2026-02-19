@@ -2,15 +2,16 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Pages\Concerns\HasMeterForm;
+use App\Filament\Pages\Schemas\MeterForm;
 use App\Models\Meter;
 use Filament\Pages\Tenancy\RegisterTenant;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Model;
 
 class RegisterMeter extends RegisterTenant
 {
-    use HasMeterForm;
+    protected Width|string|null $maxContentWidth = Width::Large;
 
     public static function getLabel(): string
     {
@@ -19,7 +20,7 @@ class RegisterMeter extends RegisterTenant
 
     public function form(Schema $schema): Schema
     {
-        return $schema->schema(static::getMeterForm());
+        return MeterForm::configure($schema);
     }
 
     protected function handleRegistration(array $data): Model

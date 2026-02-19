@@ -8,6 +8,11 @@ return [
     'create' => 'Mérő létrehozása',
     'name' => 'Mérő neve',
     'description' => 'Mérő leírása',
-    'edit' => 'Mérő szerkesztése',
     'shared_with' => 'Megosztás',
+    'edit' => [
+        'actions' => [
+            'cancel' => 'Mégse',
+            'edit' => 'Mérő szerkesztése',
+        ],
+    ],
 ];

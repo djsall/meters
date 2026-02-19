@@ -6,6 +6,7 @@ use App\Filament\Resources\Reading;
 use App\Models\Meter;
 use Filament\Actions;
 use Filament\Resources\Pages\ManageRecords;
+use Filament\Support\Enums\Width;
 use Illuminate\Contracts\Support\Htmlable;
 
 class ManageValues extends ManageRecords
@@ -16,7 +17,8 @@ class ManageValues extends ManageRecords
     {
         return [
             Actions\CreateAction::make()
-                ->createAnother(false),
+                ->createAnother(false)
+                ->modalWidth(Width::Large),
         ];
     }
 

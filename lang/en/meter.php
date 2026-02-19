@@ -8,6 +8,11 @@ return [
     'create' => 'Create meter',
     'name' => 'Meter name',
     'description' => 'Meter description',
-    'edit' => 'Edit meter',
     'shared_with' => 'Shared with',
+    'edit' => [
+        'actions' => [
+            'cancel' => 'Cancel',
+            'edit' => 'Edit meter',
+        ],
+    ],
 ];

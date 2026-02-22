@@ -88,3 +88,4 @@ networks:
 
 volumes:
     db-data:
+    storage_data:

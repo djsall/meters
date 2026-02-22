@@ -15,7 +15,7 @@ COPY . .
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Deployment script as entrypoint
-COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["entrypoint.sh"]

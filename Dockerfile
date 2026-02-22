@@ -8,11 +8,10 @@ RUN apk add --no-cache libpng-dev libjpeg-turbo-dev freetype-dev zip libzip-dev 
 # Copy composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /var/www
+WORKDIR /var/www/html
 COPY . .
-
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Update permissions path too
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Deployment script as entrypoint
 COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh

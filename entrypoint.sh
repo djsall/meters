@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd /var/www/html
+
 composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -q
 
 # Clear and rebuild caches

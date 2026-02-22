@@ -1,6 +1,6 @@
 #!/bin/bash
 # Pull the latest code
-git pull origin main
+git pull
 
 # Rebuild the image (fast thanks to Docker layer caching)
 docker compose build

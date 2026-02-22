@@ -1,21 +1,20 @@
 #!/bin/sh
-
 set -e
 
 cd /var/www/html
 
-composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+# Everyone needs the vendor folder to exist before starting
+# If it's missing, we run a quick install
+if [ ! -d "vendor" ]; then
+    composer install --no-interaction --optimize-autoloader --no-dev
+fi
 
-# Clear and rebuild caches
-php artisan cache:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Restart Queues (If using Horizon or standard workers)
-php artisan queue:restart
-
-# Run migrations (Optional: use --force for production)
-php artisan migrate --force
+# Only the APP container should handle migrations and caching
+# We detect this by checking if the command is 'php-fpm'
+if [ "$1" = "php-fpm" ]; then
+    php artisan migrate --force
+    php artisan config:cache
+    php artisan route:cache
+fi
 
 exec "$@"

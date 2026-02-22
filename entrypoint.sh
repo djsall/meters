@@ -1,5 +1,7 @@
 #!/bin/sh
 
+composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -q
+
 # Clear and rebuild caches
 php artisan cache:clear
 php artisan config:cache

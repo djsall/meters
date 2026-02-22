@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+echo "Current user: $(whoami)"
+
 cd /var/www/html
 
 # Everyone needs the vendor folder to exist before starting
@@ -16,5 +18,7 @@ if [ "$1" = "php-fpm" ]; then
     php artisan config:cache
     php artisan route:cache
 fi
+
+chown -R www-data:www-data /var/www/html
 
 exec "$@"

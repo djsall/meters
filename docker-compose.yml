@@ -6,6 +6,7 @@ services:
             dockerfile: Dockerfile
         container_name: meters-app
         restart: always
+        user: "33:33"
         env_file:
             - .env
         volumes:

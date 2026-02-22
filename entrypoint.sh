@@ -17,4 +17,6 @@ if [ "$1" = "php-fpm" ]; then
     php artisan route:cache
 fi
 
+chown -R www-data:www-data /var/www/html
+
 exec "$@"

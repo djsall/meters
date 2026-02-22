@@ -36,6 +36,7 @@ services:
         image: mysql:8.0
         container_name: meters-db
         restart: always
+        env_file: .env
         environment:
             MYSQL_DATABASE: ${DB_DATABASE}
             MYSQL_USER: ${DB_USERNAME}

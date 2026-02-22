@@ -1,0 +1,71 @@
+services:
+    # The Web App
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: meters-app
+        restart: always
+        env_file:
+            - .env
+        volumes:
+            - .:/var/www/html
+        networks:
+            - proxy
+            - internal
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.meters.rule=Host(`meters.leventeproksa.site`)"
+            - "traefik.http.routers.meters.entrypoints=websecure"
+            - "traefik.http.routers.meters.tls.certresolver=myresolver"
+            - "traefik.http.services.meters.loadbalancer.server.port=80"
+
+    # MySQL Database
+    db:
+        image: mysql:8.0
+        container_name: meters-db
+        restart: always
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+        networks:
+            - internal
+        volumes:
+            - db-data:/var/lib/mysql
+
+    # Laravel Queue Worker
+    worker:
+        build: .
+        container_name: meters-worker
+        restart: always
+        command: php artisan queue:work --verbose --tries=3 --timeout=90
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - db
+        networks:
+            - internal
+
+    # Laravel Scheduler (Cron)
+    scheduler:
+        build: .
+        container_name: meters-scheduler
+        restart: always
+        command: sh -c "while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done"
+        volumes:
+            - .:/var/www/html
+        depends_on:
+            - db
+        networks:
+            - internal
+
+networks:
+    proxy:
+        external: true
+    internal:
+        driver: bridge
+
+volumes:
+    db-data:

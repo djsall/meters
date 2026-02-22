@@ -1,57 +1,12 @@
-#!/bin/sh
-set -e
+#!/bin/bash
+# Pull the latest code
+git pull origin main
 
-echo "🚚 Dploying application"
+# Rebuild the image (fast thanks to Docker layer caching)
+docker compose build
 
-echo "⬇️ Laravel down"
+# Update containers (Docker will only restart what changed)
+# --remove-orphans cleans up old services if you rename them
+docker compose up -d --remove-orphans
 
-    php artisan down || true
-
-    echo "⬇️ Updating base code: main branch"
-
-    git pull origin main
-    git reset --hard origin/main
-
-    echo "📦 Installing composer dependencies"
-
-    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -q
-
-    echo "🔄 Restarting Php"
-
-    sudo -S service php8.4-fpm reload
-    sudo -S service nginx reload
-
-    echo "🗃️ Running migrations"
-
-    php artisan migrate --force
-
-    echo "🧹 Recreating cache"
-
-    #Clear caches
-    php artisan cache:clear
-
-    # Clear and cache routes
-    php artisan route:cache
-
-    # Clear and cache config
-    php artisan config:cache
-
-    # Clear and cache views
-    php artisan view:cache
-
-    echo "🔄 Restarting queue"
-
-    php artisan queue:restart
-
-    echo "📦 Installing Npm dependencies"
-
-    #npm ci
-
-    echo "🏗️ Compiling assets"
-
-    #npm run build
-
-echo "⬆️ Rising Laravel"
-php artisan up
-
-echo "🎉 Deployed application"
+docker exec meters-app

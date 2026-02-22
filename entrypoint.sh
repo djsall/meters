@@ -1,8 +1,10 @@
 #!/bin/sh
 
+set -e
+
 cd /var/www/html
 
-composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev -q
+composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
 # Clear and rebuild caches
 php artisan cache:clear

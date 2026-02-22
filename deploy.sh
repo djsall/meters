@@ -2,8 +2,6 @@
 # Pull the latest code
 git pull origin main
 
-chown -R www-data:www-data /var/www/html/
-
 # Rebuild the image (fast thanks to Docker layer caching)
 docker compose build
 

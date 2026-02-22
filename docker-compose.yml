@@ -11,7 +11,6 @@ services:
             - .env
         volumes:
             - .:/var/www/html
-            - storage_data:/var/www/html/storage
         networks:
             - internal
 
@@ -88,4 +87,3 @@ networks:
 
 volumes:
     db-data:
-    storage_data:

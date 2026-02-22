@@ -6,6 +6,7 @@ services:
             dockerfile: Dockerfile
         container_name: meters-app
         restart: always
+        command: [ "php-fpm" ]
         env_file:
             - .env
         volumes:
@@ -50,10 +51,11 @@ services:
 
     # Laravel Queue Worker
     worker:
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
         container_name: meters-worker
         restart: always
-        entrypoint: [ "entrypoint.sh" ]
         command: [ "php", "artisan", "queue:work", "--verbose", "--tries=3", "--timeout=90" ]
         volumes:
             - .:/var/www/html
@@ -64,10 +66,11 @@ services:
 
     # Laravel Scheduler (Cron)
     scheduler:
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
         container_name: meters-scheduler
         restart: always
-        entrypoint: [ "entrypoint.sh" ]
         command: [ "sh", "-c", "while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done" ]
         volumes:
             - .:/var/www/html

@@ -12,7 +12,7 @@ WORKDIR /var/www/html
 
 COPY . .
 # Update permissions path too
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html
 
 # Deployment script as entrypoint
 COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh

@@ -51,7 +51,8 @@ services:
         build: .
         container_name: meters-worker
         restart: always
-        command: php artisan queue:work --verbose --tries=3 --timeout=90
+        entrypoint: [ "entrypoint.sh" ]
+        command: [ "php", "artisan", "queue:work", "--verbose", "--tries=3", "--timeout=90" ]
         volumes:
             - .:/var/www/html
         depends_on:
@@ -64,7 +65,8 @@ services:
         build: .
         container_name: meters-scheduler
         restart: always
-        command: sh -c "while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done"
+        entrypoint: [ "entrypoint.sh" ]
+        command: [ "sh", "-c", "while [ true ]; do php artisan schedule:run --no-interaction; sleep 60; done" ]
         volumes:
             - .:/var/www/html
         depends_on:

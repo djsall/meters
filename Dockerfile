@@ -9,6 +9,7 @@ RUN apk add --no-cache libpng-dev libjpeg-turbo-dev freetype-dev zip libzip-dev 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+
 COPY . .
 # Update permissions path too
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

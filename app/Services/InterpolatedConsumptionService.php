@@ -115,6 +115,27 @@ readonly class InterpolatedConsumptionService
     }
 
     /**
+     * Calculates total consumption between two dates.
+     */
+    public function getTotalConsumption(CarbonInterface $start, CarbonInterface $end): ?float
+    {
+        $readings = $this->getRelevantReadings($start, $end);
+
+        if ($readings->isEmpty()) {
+            return null;
+        }
+
+        $startValue = $this->interpolate($readings, $start);
+        $endValue = $this->interpolate($readings, $end);
+
+        if ($startValue === null || $endValue === null) {
+            return null;
+        }
+
+        return $endValue - $startValue;
+    }
+
+    /**
      * Performs linear interpolation between two data points.
      */
     public function interpolate(Collection $readings, CarbonInterface $targetDate): ?float

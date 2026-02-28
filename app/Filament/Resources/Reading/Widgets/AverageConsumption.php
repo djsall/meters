@@ -45,26 +45,26 @@ class AverageConsumption extends BaseWidget
 
     protected function getDailyAverage(): Stat
     {
-        [$start, $end] = [today()->startOfMonth(), today()->endOfMonth()];
+        [$start, $end] = [today()->startOfMonth(), today()];
 
         $value = $this->service->getAverageDailyConsumption($start, $end);
 
-        $chart = $this->cacheDailyConsumption('current_month', $start, $end);
+        $chart = $this->cacheDailyConsumption('current_month', $start);
 
         return $this->makeStat(__('reading.average_consumption.monthly.current'), $value)->chart($chart)->chartColor('primary');
     }
 
     protected function getCurrentYearMonthlyAverage(): Stat
     {
-        [$start, $end] = [today()->startOfYear(), today()->endOfYear()];
+        [$start, $end] = [today()->startOfYear(), today()];
 
-        $value = $this->service->getAverageDailyConsumption($start, $end);
+        $value = $this->service->getTotalConsumption($start, $end);
 
         if ($value !== null) {
-            $value *= 30.44;
+            $value /= $end->month;
         }
 
-        $chart = $this->cacheMonthlyConsumption('current_year', $start, $end);
+        $chart = $this->cacheMonthlyConsumption('current_year', $start);
 
         return $this->makeStat(__('reading.average_consumption.yearly.current'), $value)->chart($chart)->chartColor('primary');
     }
@@ -75,7 +75,7 @@ class AverageConsumption extends BaseWidget
 
         $value = $this->service->getAverageDailyConsumption($start, $end);
 
-        $chart = $this->cacheDailyConsumption('previous_month', $start, $end);
+        $chart = $this->cacheDailyConsumption('previous_month', $start);
 
         return $this->makeStat(__('reading.average_consumption.monthly.previous'), $value)->chart($chart);
     }
@@ -84,34 +84,34 @@ class AverageConsumption extends BaseWidget
     {
         [$start, $end] = [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()];
 
-        $value = $this->service->getAverageDailyConsumption($start, $end);
+        $value = $this->service->getTotalConsumption($start, $end);
 
         if ($value !== null) {
-            $value *= 30.44;
+            $value /= 12;
         }
 
-        $chart = $this->cacheMonthlyConsumption('previous_year', $start, $end);
+        $chart = $this->cacheMonthlyConsumption('previous_year', $start);
 
         return $this->makeStat(__('reading.average_consumption.yearly.previous'), $value)->chart($chart);
     }
 
-    protected function cacheDailyConsumption(string $key, Carbon $start, Carbon $end): array
+    protected function cacheDailyConsumption(string $key, Carbon $start): array
     {
         $dailyConsumption = Cache::remember(
             "{$key}_daily_consumption_{$this->meter->id}",
             60,
-            fn () => $this->service->getDailyConsumption($start, $end)
+            fn () => $this->service->getDailyConsumption($start, $start->copy()->endOfMonth())
         );
 
         return data_get($dailyConsumption, '*.consumption');
     }
 
-    protected function cacheMonthlyConsumption(string $key, Carbon $start, Carbon $end): array
+    protected function cacheMonthlyConsumption(string $key, Carbon $start): array
     {
         $monthlyConsumption = Cache::remember(
             "{$key}_monthly_consumption_{$this->meter->id}",
             60,
-            fn () => $this->service->getMonthlyConsumption($start, $end)
+            fn () => $this->service->getMonthlyConsumption($start, $start->copy()->endOfYear())
         );
 
         return data_get($monthlyConsumption, '*.consumption');

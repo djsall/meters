@@ -31,7 +31,7 @@ services:
             - internal
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.meters.rule=Host(`meters.leventeproksa.site`)"
+            - "traefik.http.routers.meters.rule=Host(`meters.leventeproksa.com`)"
             - "traefik.http.routers.meters.entrypoints=websecure"
             - "traefik.http.routers.meters.tls.certresolver=myresolver"
             - "traefik.docker.network=proxy"

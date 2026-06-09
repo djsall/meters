@@ -6,7 +6,7 @@ services:
             dockerfile: Dockerfile
         container_name: meters-app
         restart: always
-        command: [ "php-fpm" ]
+        command: ["php-fpm"]
         env_file:
             - .env
         volumes:
@@ -47,6 +47,7 @@ services:
         image: mysql:8.0
         container_name: meters-db
         restart: always
+        command: --skip-log-bin --disable-log-bin
         env_file:
             - .env
         environment:

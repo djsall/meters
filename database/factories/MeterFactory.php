@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\MeterType;
+use App\Models\Meter;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Meter>
+ * @extends Factory<Meter>
  */
 class MeterFactory extends Factory
 {

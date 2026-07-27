@@ -24,7 +24,7 @@ class MeterForm
                     ->required(),
                 Forms\Components\Textarea::make('description')
                     ->label(__('meter.description')),
-                Forms\Components\Select::make('shared_users')
+                Select::make('shared_users')
                     ->label(__('meter.shared_with'))
                     ->options(static function (): Collection {
                         return User::query()

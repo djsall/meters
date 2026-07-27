@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
 use App\Services\InterpolatedConsumptionService;
+use Filament\Support\Colors\Color;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
@@ -52,11 +53,14 @@ class MonthlyConsumptionChart extends ChartWidget
             'datasets' => [[
                 'label' => __('charts.monthly_consumption.label'),
                 'data' => $results->pluck('consumption')->toArray(),
-                'backgroundColor' => $results->map(fn ($item) => $item['is_estimated'] ? 'transparent' : 'primary'
+                'backgroundColor' => $results->map(
+                    fn ($item) => Color::convertToHex($item['is_estimated'] ? Color::Purple[200] : Color::Purple[400])
                 )->toArray(),
-                'borderRadius' => 4,
+                'borderRadius' => 8,
+                'borderColor' => 'none',
             ]],
-            'labels' => $results->map(fn ($item) => $item['month']->translatedFormat('Y. M')
+            'labels' => $results->map(
+                fn ($item) => $item['month']->translatedFormat('Y. M')
             )->toArray(),
         ];
     }

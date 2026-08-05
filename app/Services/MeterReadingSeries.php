@@ -26,10 +26,10 @@ readonly class MeterReadingSeries
             return $readings->sortBy('date')->values();
         }
 
-        $predocessor = $this->meter->previousMeter;
-        $predocessorReadings = $this->rebase($predocessor, $this->fetchOwnReadings($predocessor, $start, $this->meter->installed_at));
+        $predecessor = $this->meter->previousMeter;
+        $predecessorReadings = $this->rebase($predecessor, $this->fetchOwnReadings($predecessor, $start, $this->meter->installed_at));
 
-        return $readings->merge($predocessorReadings)->sortBy('date')->values();
+        return $readings->merge($predecessorReadings)->sortBy('date')->values();
     }
 
     private function fetchOwnReadings(Meter $meter, CarbonInterface $start, CarbonInterface $end): Collection
@@ -59,7 +59,7 @@ readonly class MeterReadingSeries
         $baseline = (float) $meter->readings()->oldest('date')->value('value');
         $offset = $meter->previousMeter?->retired_total_consumption ?? 0.0;
 
-        if ($baseline = 0.0 && $offset = 0.0) {
+        if ($baseline === 0.0 && $offset === 0.0) {
             return $readings;
         }
 

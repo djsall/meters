@@ -30,7 +30,8 @@ class MeterForm
                 Forms\Components\Textarea::make('description')
                     ->label(__('meter.description')),
                 Forms\Components\DatePicker::make('installed_at')
-                    ->label(__('meter.installed_at')),
+                    ->label(__('meter.installed_at'))
+                    ->default(today()),
                 Select::make('previous_meter_id')
                     ->label(__('meter.previous_meter'))
                     ->helperText(__('meter.previous_meter_help'))
@@ -50,7 +51,8 @@ class MeterForm
                             )
                             ->whereDoesntHave('successor')
                             ->pluck('name', 'id');
-                    }),
+                    })
+                    ->searchable(),
                 Select::make('shared_users')
                     ->label(__('meter.shared_with'))
                     ->options(static function (): Collection {

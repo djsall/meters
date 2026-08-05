@@ -69,7 +69,7 @@ class Meter extends Model
     public function refreshRetiredTotalConsumption(): void
     {
         $first = $this->readings()->oldest('date')->first();
-        $last = $this->readings()->latest('date')->last();
+        $last = $this->readings()->latest('date')->first();
 
         $ownConsumption = ($first && $last) ? $last->value - $first->value : 0.0;
 

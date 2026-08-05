@@ -6,15 +6,19 @@ use App\Enums\ReadingBoundary;
 use App\Models\Meter;
 use App\Models\Reading;
 use Carbon\CarbonInterface;
+use Closure;
 use Illuminate\Support\Collection;
 
 readonly class InterpolatedConsumptionService
 {
     private int $maxGapDays;
 
+    private MeterReadingSeries $readings;
+
     public function __construct(private Meter $meter)
     {
         $this->maxGapDays = 31;
+        $this->readings = new MeterReadingSeries($meter);
     }
 
     /**
@@ -23,31 +27,14 @@ readonly class InterpolatedConsumptionService
      */
     public function getMonthlyConsumption(CarbonInterface $rangeStart, CarbonInterface $rangeEnd): Collection
     {
-        $readings = $this->getRelevantReadings($rangeStart, $rangeEnd);
-        $months = collect($rangeStart->copy()->startOfMonth()->monthsUntil($rangeEnd))->values();
-
-        $results = collect();
-        $previousValue = $this->interpolate($readings, $rangeStart);
-
-        foreach ($months as $monthStart) {
-            $monthEnd = $monthStart->copy()->endOfMonth();
-            $currentValue = $this->interpolate($readings, $monthEnd);
-
-            $consumption = null;
-            if ($previousValue !== null && $currentValue !== null) {
-                $consumption = round($currentValue - $previousValue);
-            }
-
-            $results->push([
-                'month' => $monthStart,
-                'consumption' => $consumption,
-                'is_estimated' => ! $this->hasReadingInMonth($readings, $monthStart),
-            ]);
-
-            $previousValue = $currentValue;
-        }
-
-        return $results;
+        return $this->getPeriodConsumption(
+            $rangeStart,
+            $rangeEnd,
+            'month',
+            collect($rangeStart->copy()->startOfMonth()->monthsUntil($rangeEnd))->values(),
+            fn (CarbonInterface $periodStart): CarbonInterface => $periodStart->copy()->endOfMonth(),
+            fn (CarbonInterface $date, CarbonInterface $periodStart): bool => $date->isSameMonth($periodStart),
+        );
     }
 
     /**
@@ -56,15 +43,31 @@ readonly class InterpolatedConsumptionService
      */
     public function getDailyConsumption(CarbonInterface $rangeStart, CarbonInterface $rangeEnd): Collection
     {
-        $readings = $this->getRelevantReadings($rangeStart, $rangeEnd);
-        $days = collect($rangeStart->copy()->startOfMonth()->daysUntil($rangeEnd))->values();
+        return $this->getPeriodConsumption(
+            $rangeStart,
+            $rangeEnd,
+            'day',
+            collect($rangeStart->copy()->startOfMonth()->daysUntil($rangeEnd))->values(),
+            fn (CarbonInterface $periodStart): CarbonInterface => $periodStart->copy()->endofDay(),
+            fn (CarbonInterface $date, CarbonInterface $periodStart): bool => $date->isSameDay($periodStart),
+        );
+    }
 
-        $results = collect();
+    private function getPeriodConsumption(
+        CarbonInterface $rangeStart,
+        CarbonInterface $rangeEnd,
+        string $periodKey,
+        Collection $periods,
+        Closure $periodEnd,
+        Closure $isSamePeriod
+    ): Collection {
+        $readings = $this->readings->between($rangeStart, $rangeEnd);
+        $results = new Collection;
+
         $previousValue = $this->interpolate($readings, $rangeStart);
 
-        foreach ($days as $dayStart) {
-            $dayEnd = $dayStart->copy()->endOfDay();
-            $currentValue = $this->interpolate($readings, $dayEnd);
+        foreach ($periods as $periodStart) {
+            $currentValue = $this->interpolate($readings, $periodEnd($periodStart));
 
             $consumption = null;
             if ($previousValue !== null && $currentValue !== null) {
@@ -72,9 +75,9 @@ readonly class InterpolatedConsumptionService
             }
 
             $results->push([
-                'day' => $dayStart,
+                $periodKey => $periodStart,
                 'consumption' => $consumption,
-                'is_estimated' => ! $this->hasReadingInDay($readings, $dayStart),
+                'is_estimated' => ! $readings->contains(fn (Reading $reading): bool => $isSamePeriod($reading->date, $periodStart)),
             ]);
 
             $previousValue = $currentValue;
@@ -88,7 +91,7 @@ readonly class InterpolatedConsumptionService
      */
     public function getAverageDailyConsumption(CarbonInterface $startDate, CarbonInterface $endDate): ?float
     {
-        $readings = $this->getRelevantReadings($startDate, $endDate);
+        $readings = $this->readings->between($startDate, $endDate);
 
         if ($readings->isEmpty()) {
             return null;
@@ -119,7 +122,7 @@ readonly class InterpolatedConsumptionService
      */
     public function getTotalConsumption(CarbonInterface $start, CarbonInterface $end): ?float
     {
-        $readings = $this->getRelevantReadings($start, $end);
+        $readings = $this->readings->between($start, $end);
 
         if ($readings->isEmpty()) {
             return null;
@@ -196,37 +199,5 @@ readonly class InterpolatedConsumptionService
         }
 
         return $closestReading->date;
-    }
-
-    private function hasReadingInMonth(Collection $readings, CarbonInterface $month): bool
-    {
-        return $readings->contains(fn (Reading $reading) => $reading->date->isSameMonth($month));
-    }
-
-    private function hasReadingInDay(Collection $readings, CarbonInterface $day): bool
-    {
-        return $readings->contains(fn (Reading $reading) => $reading->date->isSameDay($day));
-    }
-
-    private function getRelevantReadings(CarbonInterface $start, CarbonInterface $end): Collection
-    {
-        $readingBefore = $this->meter->readings()
-            ->where('date', '<', $start)
-            ->latest('date')
-            ->limit(1)
-            ->first();
-
-        $readingsInside = $this->meter->readings()
-            ->whereBetween('date', [$start, $end])
-            ->oldest('date')
-            ->get();
-
-        $readingAfter = $this->meter->readings()
-            ->where('date', '>', $end)
-            ->oldest('date')
-            ->limit(1)
-            ->first();
-
-        return collect([$readingBefore, ...$readingsInside, $readingAfter])->filter()->values();
     }
 }

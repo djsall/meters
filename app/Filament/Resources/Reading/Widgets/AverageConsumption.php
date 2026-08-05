@@ -36,62 +36,60 @@ class AverageConsumption extends BaseWidget
     protected function getStats(): array
     {
         return [
-            $this->getDailyAverage(),
-            $this->getCurrentYearMonthlyAverage(),
-            $this->getDailyAveragePreviousMonth(),
-            $this->getPreviousYearMonthlyAverage(),
+            $this
+                ->dailyAverageStat(
+                    'current_month',
+                    'monthly.current',
+                    today()->startOfMonth(),
+                    today()
+                )
+                ->chartColor('primary'),
+            $this
+                ->monthlyAverageStat(
+                    'current_year',
+                    'yearly.current',
+                    today()->startOfYear(),
+                    today(),
+                    today()->month,
+                )
+                ->chartColor('primary'),
+            $this
+                ->dailyAverageStat(
+                    'previous_month',
+                    'monthly.previous',
+                    today()->subMonth()->startOfMonth(),
+                    today()->subMonth()->endOfMonth(),
+                ),
+            $this
+                ->monthlyAverageStat(
+                    'previous_year',
+                    'yearly.previous',
+                    today()->subYear()->startOfYear(),
+                    today()->subYear()->endOfYear(),
+                    12,
+                ),
         ];
     }
 
-    protected function getDailyAverage(): Stat
+    protected function dailyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end): Stat
     {
-        [$start, $end] = [today()->startOfMonth(), today()];
+        $value = $this->cacheAverageDailyConsumption($cacheKey, $start, $end);
+        $chart = $this->cacheDailyConsumption($cacheKey, $start);
 
-        $value = $this->cacheAverageDailyConsumption('current_month', $start, $end);
-        $chart = $this->cacheDailyConsumption('current_month', $start);
-
-        return $this->makeStat(__('reading.average_consumption.monthly.current'), $value)->chart($chart)->chartColor('primary');
+        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart);
     }
 
-    protected function getCurrentYearMonthlyAverage(): Stat
+    protected function monthlyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, int $monthsElapsed): Stat
     {
-        [$start, $end] = [today()->startOfYear(), today()];
-
-        $value = $this->cacheTotalConsumption('current_year', $start, $end);
+        $value = $this->cacheTotalConsumption($cacheKey, $start, $end);
 
         if ($value !== null) {
-            $value /= $end->month;
+            $value /= $monthsElapsed;
         }
 
-        $chart = $this->cacheMonthlyConsumption('current_year', $start);
+        $chart = $this->cacheMonthlyConsumption($cacheKey, $start);
 
-        return $this->makeStat(__('reading.average_consumption.yearly.current'), $value)->chart($chart)->chartColor('primary');
-    }
-
-    protected function getDailyAveragePreviousMonth(): Stat
-    {
-        [$start, $end] = [today()->subMonth()->startOfMonth(), today()->subMonth()->endOfMonth()];
-
-        $value = $this->cacheAverageDailyConsumption('previous_month', $start, $end);
-
-        $chart = $this->cacheDailyConsumption('previous_month', $start);
-
-        return $this->makeStat(__('reading.average_consumption.monthly.previous'), $value)->chart($chart);
-    }
-
-    protected function getPreviousYearMonthlyAverage(): Stat
-    {
-        [$start, $end] = [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()];
-
-        $value = $this->cacheTotalConsumption('previous_year', $start, $end);
-
-        if ($value !== null) {
-            $value /= 12;
-        }
-
-        $chart = $this->cacheMonthlyConsumption('previous_year', $start);
-
-        return $this->makeStat(__('reading.average_consumption.yearly.previous'), $value)->chart($chart);
+        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart);
     }
 
     protected function cacheDailyConsumption(string $key, Carbon $start): array

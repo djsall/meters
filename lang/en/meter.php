@@ -9,6 +9,9 @@ return [
     'name' => 'Meter name',
     'description' => 'Meter description',
     'shared_with' => 'Shared with',
+    'installed_at' => 'Installed at',
+    'previous_meter' => 'Previous meter',
+    'previous_meter_help' => 'Link the meter this one replaced to keep consumption continous across the swap.',
     'edit' => [
         'actions' => [
             'cancel' => 'Cancel',

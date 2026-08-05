@@ -47,8 +47,7 @@ class AverageConsumption extends BaseWidget
     {
         [$start, $end] = [today()->startOfMonth(), today()];
 
-        $value = $this->service->getAverageDailyConsumption($start, $end);
-
+        $value = $this->cacheAverageDailyConsumption('current_month', $start, $end);
         $chart = $this->cacheDailyConsumption('current_month', $start);
 
         return $this->makeStat(__('reading.average_consumption.monthly.current'), $value)->chart($chart)->chartColor('primary');
@@ -58,7 +57,7 @@ class AverageConsumption extends BaseWidget
     {
         [$start, $end] = [today()->startOfYear(), today()];
 
-        $value = $this->service->getTotalConsumption($start, $end);
+        $value = $this->cacheTotalConsumption('current_year', $start, $end);
 
         if ($value !== null) {
             $value /= $end->month;
@@ -73,7 +72,7 @@ class AverageConsumption extends BaseWidget
     {
         [$start, $end] = [today()->subMonth()->startOfMonth(), today()->subMonth()->endOfMonth()];
 
-        $value = $this->service->getAverageDailyConsumption($start, $end);
+        $value = $this->cacheAverageDailyConsumption('previous_month', $start, $end);
 
         $chart = $this->cacheDailyConsumption('previous_month', $start);
 
@@ -84,7 +83,7 @@ class AverageConsumption extends BaseWidget
     {
         [$start, $end] = [today()->subYear()->startOfYear(), today()->subYear()->endOfYear()];
 
-        $value = $this->service->getTotalConsumption($start, $end);
+        $value = $this->cacheTotalConsumption('previous_year', $start, $end);
 
         if ($value !== null) {
             $value /= 12;
@@ -104,6 +103,24 @@ class AverageConsumption extends BaseWidget
         );
 
         return data_get($dailyConsumption, '*.consumption');
+    }
+
+    protected function cacheAverageDailyConsumption(string $key, Carbon $start, Carbon $end): ?float
+    {
+        return Cache::remember(
+            "{$key}_average_daily_consumption_{$this->meter->id}",
+            60,
+            fn () => $this->service->getAverageDailyConsumption($start, $end)
+        );
+    }
+
+    protected function cacheTotalConsumption(string $key, Carbon $start, Carbon $end): ?float
+    {
+        return Cache::remember(
+            "{$key}_total_consumption_{$this->meter->id}",
+            60,
+            fn () => $this->service->getTotalConsumption($start, $end)
+        );
     }
 
     protected function cacheMonthlyConsumption(string $key, Carbon $start): array

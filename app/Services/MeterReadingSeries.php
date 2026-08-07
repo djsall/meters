@@ -57,7 +57,7 @@ readonly class MeterReadingSeries
     private function rebase(Meter $meter, Collection $readings): Collection
     {
         $baseline = (float) $meter->readings()->oldest('date')->value('value');
-        $offset = $meter->previousMeter?->retired_total_consumption ?? 0.0;
+        $offset = $meter->previousMeter->retired_total_consumption ?? 0.0;
 
         if ($baseline === 0.0 && $offset === 0.0) {
             return $readings;

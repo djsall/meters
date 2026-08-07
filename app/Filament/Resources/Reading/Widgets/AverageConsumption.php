@@ -36,50 +36,46 @@ class AverageConsumption extends BaseWidget
     protected function getStats(): array
     {
         return [
-            $this
-                ->dailyAverageStat(
-                    'current_month',
-                    'monthly.current',
-                    today()->startOfMonth(),
-                    today()
-                )
-                ->chartColor('primary'),
-            $this
-                ->monthlyAverageStat(
-                    'current_year',
-                    'yearly.current',
-                    today()->startOfYear(),
-                    today(),
-                    today()->month,
-                )
-                ->chartColor('primary'),
-            $this
-                ->dailyAverageStat(
-                    'previous_month',
-                    'monthly.previous',
-                    today()->subMonth()->startOfMonth(),
-                    today()->subMonth()->endOfMonth(),
-                ),
-            $this
-                ->monthlyAverageStat(
-                    'previous_year',
-                    'yearly.previous',
-                    today()->subYear()->startOfYear(),
-                    today()->subYear()->endOfYear(),
-                    12,
-                ),
+            $this->dailyAverageStat(
+                'current_month',
+                'monthly.current',
+                today()->startOfMonth(),
+                today(),
+                'primary'
+            ),
+            $this->monthlyAverageStat(
+                'current_year',
+                'yearly.current',
+                today()->startOfYear(),
+                today(),
+                today()->month,
+                'primary'
+            ),
+            $this->dailyAverageStat(
+                'previous_month',
+                'monthly.previous',
+                today()->subMonth()->startOfMonth(),
+                today()->subMonth()->endOfMonth(),
+            ),
+            $this->monthlyAverageStat(
+                'previous_year',
+                'yearly.previous',
+                today()->subYear()->startOfYear(),
+                today()->subYear()->endOfYear(),
+                12,
+            ),
         ];
     }
 
-    protected function dailyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end): Stat
+    protected function dailyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, ?string $chartColor = null): Stat
     {
         $value = $this->cacheAverageDailyConsumption($cacheKey, $start, $end);
         $chart = $this->cacheDailyConsumption($cacheKey, $start);
 
-        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart);
+        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart)->chartColor($chartColor);
     }
 
-    protected function monthlyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, int $monthsElapsed): Stat
+    protected function monthlyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, int $monthsElapsed, ?string $chartColor = null): Stat
     {
         $value = $this->cacheTotalConsumption($cacheKey, $start, $end);
 
@@ -89,7 +85,7 @@ class AverageConsumption extends BaseWidget
 
         $chart = $this->cacheMonthlyConsumption($cacheKey, $start);
 
-        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart);
+        return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart)->chartColor($chartColor);
     }
 
     protected function cacheDailyConsumption(string $key, Carbon $start): array

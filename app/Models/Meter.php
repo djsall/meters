@@ -41,7 +41,7 @@ class Meter extends Model
             'type' => MeterType::class,
             'settings' => 'array',
             'shared_users' => 'json',
-            'installed_at' => 'datetime',
+            'installed_at' => 'date',
             'retired_total_consumption' => 'float',
         ];
     }
@@ -68,7 +68,9 @@ class Meter extends Model
 
     public function refreshRetiredTotalConsumption(): void
     {
+        /** @var ?Reading $first */
         $first = $this->readings()->oldest('date')->first();
+        /** @var ?Reading $last */
         $last = $this->readings()->latest('date')->first();
 
         $ownConsumption = ($first && $last) ? $last->value - $first->value : 0.0;

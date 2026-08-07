@@ -10,14 +10,17 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property-read Meter $meter
- * @property-read Carbon $date
+ * @property float $value
+ * @property Carbon $date
  */
 class Reading extends Model
 {
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'meter_id', 'value', 'date',
+        'meter_id',
+        'value',
+        'date',
     ];
 
     protected function casts(): array

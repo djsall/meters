@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MeterType;
 use App\Observers\MeterObserver;
+use Carbon\CarbonInterface;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,9 +19,10 @@ use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
 /**
  * @property-read Collection<Reading> $readings
  * @property-read User $user
- * @property-read MeterType $type
+ * @property MeterType $type
  * @property-read ?Meter $previousMeter
  * @property-read ?Meter $successor
+ * @property ?CarbonInterface $installed_at
  */
 #[ObservedBy(MeterObserver::class)]
 class Meter extends Model
@@ -28,7 +30,14 @@ class Meter extends Model
     use HasFactory, HasJsonRelationships, HasUuids;
 
     protected $fillable = [
-        'user_id', 'type', 'name', 'description', 'settings', 'shared_users', 'previous_meter_id', 'installed_at',
+        'user_id',
+        'type',
+        'name',
+        'description',
+        'settings',
+        'shared_users',
+        'previous_meter_id',
+        'installed_at',
     ];
 
     protected $hidden = [

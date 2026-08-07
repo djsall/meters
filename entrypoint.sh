@@ -15,8 +15,15 @@ fi
 # We detect this by checking if the command is 'php-fpm'
 if [ "$1" = "php-fpm" ]; then
     php artisan migrate --force
+
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan route:clear
+    php artisan optimize:clear
+
     php artisan config:cache
     php artisan route:cache
+    php artisan optimize
 fi
 
 chown -R www-data:www-data storage bootstrap/cache

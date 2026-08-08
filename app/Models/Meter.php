@@ -88,7 +88,7 @@ class Meter extends Model
         $this->saveQuietly();
     }
 
-    public static function getFilamentTenant(): Meter
+    public static function getFilamentTenant(): ?Meter
     {
         /** @var Meter $tenant */
         $tenant = Filament::getTenant();

@@ -40,7 +40,7 @@ class MeterForm
                         $count = Cache::remember(
                             key: "meter_{$value}_successors_count",
                             ttl: 60,
-                            callback: fn() => Meter::query()->whereKey($value)->has('successor')->count()
+                            callback: fn () => Meter::query()->whereKey($value)->has('successor')->count()
                         );
 
                         return $count > 0;
@@ -57,7 +57,7 @@ class MeterForm
                             ->where('type', $type)
                             ->when(
                                 Meter::getFilamentTenant(),
-                                fn(Builder $query, Meter $tenant): Builder => $query->whereKeyNot($tenant->getKey())
+                                fn (Builder $query, Meter $tenant): Builder => $query->whereKeyNot($tenant->getKey())
                             )
                             ->pluck('name', 'id');
                     })
@@ -73,7 +73,7 @@ class MeterForm
                     ->searchable()
                     ->mutateDehydratedStateUsing(static function (array $state): array {
                         return collect($state)
-                            ->map(fn(string $item): int => str($item)->toInteger())
+                            ->map(fn (string $item): int => str($item)->toInteger())
                             ->toArray();
                     }),
             ]);

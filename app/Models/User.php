@@ -86,6 +86,6 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->meters->merge($this->sharedMeters);
+        return $this->meters()->whereDoesntHave('successor')->get()->merge($this->sharedMeters);
     }
 }

@@ -12,6 +12,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class MeterForm
 {
@@ -35,6 +36,15 @@ class MeterForm
                 Select::make('previous_meter_id')
                     ->label(__('meter.previous_meter'))
                     ->helperText(__('meter.previous_meter_help'))
+                    ->disableOptionWhen(static function (string $value): bool {
+                        $count = Cache::remember(
+                            key: "meter_{$value}_successors_count",
+                            ttl: 60 * 60,
+                            callback: fn() => Meter::query()->whereKey($value)->has('successor')->count()
+                        );
+
+                        return $count > 0;
+                    })
                     ->options(static function (Get $get): Collection {
                         $type = $get('type');
 
@@ -47,9 +57,8 @@ class MeterForm
                             ->where('type', $type)
                             ->when(
                                 Meter::getFilamentTenant(),
-                                fn (Builder $query, Meter $tenant): Builder => $query->whereKeyNot($tenant->getKey())
+                                fn(Builder $query, Meter $tenant): Builder => $query->whereKeyNot($tenant->getKey())
                             )
-                            ->whereDoesntHave('successor')
                             ->pluck('name', 'id');
                     })
                     ->searchable(),
@@ -64,7 +73,7 @@ class MeterForm
                     ->searchable()
                     ->mutateDehydratedStateUsing(static function (array $state): array {
                         return collect($state)
-                            ->map(fn (string $item): int => str($item)->toInteger())
+                            ->map(fn(string $item): int => str($item)->toInteger())
                             ->toArray();
                     }),
             ]);

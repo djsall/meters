@@ -39,7 +39,7 @@ class MeterForm
                     ->disableOptionWhen(static function (string $value): bool {
                         $count = Cache::remember(
                             key: "meter_{$value}_successors_count",
-                            ttl: 60 * 60,
+                            ttl: 60,
                             callback: fn() => Meter::query()->whereKey($value)->has('successor')->count()
                         );
 

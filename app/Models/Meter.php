@@ -23,6 +23,7 @@ use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
  * @property-read ?Meter $previousMeter
  * @property-read ?Meter $successor
  * @property ?CarbonInterface $installed_at
+ * @property float $retired_total_consumption
  */
 #[ObservedBy(MeterObserver::class)]
 class Meter extends Model

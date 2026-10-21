@@ -23,7 +23,7 @@ services:
                 max-file: "3"
 
     webserver:
-        image: nginx:alpine
+        image: nginx
         container_name: meters-nginx
         restart: always
         volumes:
@@ -63,7 +63,11 @@ services:
         volumes:
             - db-data:/var/lib/mysql
         healthcheck:
-            test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+            test:
+                [
+                    "CMD-SHELL",
+                    'mysqladmin ping -h localhost -u root -p"$$MYSQL_ROOT_PASSWORD" --silent',
+                ]
             interval: 10s
             timeout: 5s
             retries: 10
@@ -81,7 +85,15 @@ services:
             dockerfile: Dockerfile
         container_name: meters-worker
         restart: always
-        command: [ "php", "artisan", "queue:work", "--verbose", "--tries=3", "--timeout=90" ]
+        command:
+            [
+                "php",
+                "artisan",
+                "queue:work",
+                "--verbose",
+                "--tries=3",
+                "--timeout=90",
+            ]
         volumes:
             - .:/var/www/html
         depends_on:
@@ -102,7 +114,12 @@ services:
             dockerfile: Dockerfile
         container_name: meters-scheduler
         restart: always
-        command: [ "sh", "-c", "while [ true ]; do php artisan schedule:run --no-interaction; sleep 1; done" ]
+        command:
+            [
+                "sh",
+                "-c",
+                "while [ true ]; do php artisan schedule:run --no-interaction; sleep 1; done",
+            ]
         volumes:
             - .:/var/www/html
         depends_on:

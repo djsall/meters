@@ -6,7 +6,9 @@ use App\Models\Meter;
 use App\Models\Reading;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -97,6 +99,10 @@ class ReadingResource extends Resource
                     ->iconButton(),
                 DeleteAction::make()
                     ->iconButton(),
+            ])
+            ->toolbarActions([
+                DeleteBulkAction::make()
+                    ->visible(static fn () => Filament::auth()->user()->role->isAdmin()),
             ]);
     }
 

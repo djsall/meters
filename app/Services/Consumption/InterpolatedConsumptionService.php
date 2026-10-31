@@ -25,8 +25,9 @@ readonly class InterpolatedConsumptionService
     {
         return $this->getPeriodConsumption(
             'month',
-            collect($rangeStart->copy()->startOfMonth()->monthsUntil($rangeEnd))->values(),
+            $this->monthsOf($rangeStart, $rangeEnd),
             fn (CarbonInterface $periodStart): CarbonInterface => $periodStart->copy()->addMonthNoOverflow(),
+            precision: 1,
         );
     }
 
@@ -40,6 +41,7 @@ readonly class InterpolatedConsumptionService
             'day',
             collect($rangeStart->copy()->startOfMonth()->daysUntil($rangeEnd))->values(),
             fn (CarbonInterface $periodStart): CarbonInterface => $periodStart->copy()->addDay(),
+            precision: 2,
         );
     }
 
@@ -47,7 +49,7 @@ readonly class InterpolatedConsumptionService
      * @param  Collection<int, CarbonInterface>  $periods
      * @param  Closure(CarbonInterface): CarbonInterface  $nextPeriodStart
      */
-    private function getPeriodConsumption(string $periodKey, Collection $periods, Closure $nextPeriodStart): Collection
+    private function getPeriodConsumption(string $periodKey, Collection $periods, Closure $nextPeriodStart, int $precision): Collection
     {
         if ($periods->isEmpty()) {
             return new Collection;
@@ -56,7 +58,7 @@ readonly class InterpolatedConsumptionService
         $intervals = $this->intervals->between($periods->first(), $nextPeriodStart($periods->last()));
         $today = ConsumptionInterval::dayOf(today());
 
-        return $periods->map(function (CarbonInterface $periodStart) use ($periodKey, $intervals, $nextPeriodStart, $today): array {
+        return $periods->map(function (CarbonInterface $periodStart) use ($periodKey, $intervals, $nextPeriodStart, $today, $precision): array {
             $startDay = ConsumptionInterval::dayOf($periodStart);
             $endDay = ConsumptionInterval::dayOf($nextPeriodStart($periodStart));
             $consumption = $this->consumptionWithin($intervals, $startDay, $endDay);
@@ -70,7 +72,7 @@ readonly class InterpolatedConsumptionService
 
             return [
                 $periodKey => $periodStart,
-                'consumption' => $consumption === null ? null : round($consumption),
+                'consumption' => $consumption === null ? null : round($consumption, $precision),
                 'is_estimated' => ! $hasReading || ! $isFullyCovered,
             ];
         })->values();
@@ -92,6 +94,34 @@ readonly class InterpolatedConsumptionService
         }
 
         return $this->consumptionWithin($intervals, $startDay, $endDay) / $coveredDays;
+    }
+
+    /**
+     * Calculates the average monthly usage over the months covered by readings,
+     * counting partially covered months by the share of their days covered.
+     * Returns null if no part of the range is covered.
+     */
+    public function getAverageMonthlyConsumption(CarbonInterface $startDate, CarbonInterface $endDate): ?float
+    {
+        $intervals = $this->intervals->between($startDate, $endDate);
+        $startDay = ConsumptionInterval::dayOf($startDate);
+        $endDay = ConsumptionInterval::dayOf($endDate);
+
+        $coveredMonths = $this->monthsOf($startDate, $endDate)->sum(function (CarbonInterface $monthStart) use ($intervals, $startDay, $endDay): float {
+            $coveredDays = $this->coveredDays(
+                $intervals,
+                max(ConsumptionInterval::dayOf($monthStart), $startDay),
+                min(ConsumptionInterval::dayOf($monthStart->copy()->addMonthNoOverflow()), $endDay),
+            );
+
+            return $coveredDays / $monthStart->daysInMonth;
+        });
+
+        if ($coveredMonths <= 0) {
+            return null;
+        }
+
+        return $this->consumptionWithin($intervals, $startDay, $endDay) / $coveredMonths;
     }
 
     /**
@@ -125,5 +155,13 @@ readonly class InterpolatedConsumptionService
     private function coveredDays(Collection $intervals, int $startDay, int $endDay): int
     {
         return $intervals->sum(fn (ConsumptionInterval $interval): int => $interval->overlapDays($startDay, $endDay));
+    }
+
+    /**
+     * @return Collection<int, CarbonInterface>
+     */
+    private function monthsOf(CarbonInterface $start, CarbonInterface $end): Collection
+    {
+        return collect($start->copy()->startOfMonth()->monthsUntil($end))->values();
     }
 }

@@ -112,14 +112,14 @@ it('handles the old -> new swap without a negative month', function () {
     $months = monthly($new);
 
     // Without an opening reading only Sep 19 onwards is known on the new meter
-    expect($months['09']['consumption'])->toBe(3.0)
+    expect($months['09']['consumption'])->toBe(3.1)
         ->and($months['09']['is_estimated'])->toBeTrue()
-        ->and($months['10']['consumption'])->toBe(8.0)
+        ->and($months['10']['consumption'])->toBe(7.7)
         ->and($months['11']['consumption'])->toBeNull();
 
     reading($new, '2025-09-01', 0);
 
-    expect(monthly($new)['09']['consumption'])->toBe(7.0);
+    expect(monthly($new)['09']['consumption'])->toBe(7.3);
 });
 
 it('includes the predecessor readings when readings are scoped to the tenant meter', function () {

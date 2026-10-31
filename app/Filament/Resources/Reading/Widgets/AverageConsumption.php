@@ -33,6 +33,9 @@ class AverageConsumption extends BaseWidget
         $this->service = new InterpolatedConsumptionService($this->meter);
     }
 
+    /**
+     * Ranges end at the start of the following day, month or year, which is excluded.
+     */
     protected function getStats(): array
     {
         return [
@@ -48,21 +51,19 @@ class AverageConsumption extends BaseWidget
                 'yearly.current',
                 today()->startOfYear(),
                 today(),
-                today()->month,
                 'primary'
             ),
             $this->dailyAverageStat(
                 'previous_month',
                 'monthly.previous',
-                today()->subMonth()->startOfMonth(),
-                today()->subMonth()->endOfMonth(),
+                today()->subMonthNoOverflow()->startOfMonth(),
+                today()->startOfMonth(),
             ),
             $this->monthlyAverageStat(
                 'previous_year',
                 'yearly.previous',
                 today()->subYear()->startOfYear(),
-                today()->subYear()->endOfYear(),
-                12,
+                today()->startOfYear(),
             ),
         ];
     }
@@ -75,14 +76,9 @@ class AverageConsumption extends BaseWidget
         return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart)->chartColor($chartColor);
     }
 
-    protected function monthlyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, int $monthsElapsed, ?string $chartColor = null): Stat
+    protected function monthlyAverageStat(string $cacheKey, string $labelKey, Carbon $start, Carbon $end, ?string $chartColor = null): Stat
     {
-        $value = $this->cacheTotalConsumption($cacheKey, $start, $end);
-
-        if ($value !== null) {
-            $value /= $monthsElapsed;
-        }
-
+        $value = $this->cacheAverageMonthlyConsumption($cacheKey, $start, $end);
         $chart = $this->cacheMonthlyConsumption($cacheKey, $start);
 
         return $this->makeStat(__("reading.average_consumption.{$labelKey}"), $value)->chart($chart)->chartColor($chartColor);
@@ -108,12 +104,12 @@ class AverageConsumption extends BaseWidget
         );
     }
 
-    protected function cacheTotalConsumption(string $key, Carbon $start, Carbon $end): ?float
+    protected function cacheAverageMonthlyConsumption(string $key, Carbon $start, Carbon $end): ?float
     {
         return Cache::remember(
-            "{$key}_total_consumption_{$this->meter->id}",
+            "{$key}_average_monthly_consumption_{$this->meter->id}",
             60,
-            fn () => $this->service->getTotalConsumption($start, $end)
+            fn () => $this->service->getAverageMonthlyConsumption($start, $end)
         );
     }
 

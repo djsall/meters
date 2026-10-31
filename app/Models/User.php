@@ -23,6 +23,7 @@ use Staudenmeir\EloquentJsonRelations\Relations\HasManyJson;
  * @property-read Collection<Meter> $overdueMeters
  * @property-read Collection<Meter> $sharedMeters
  * @property-read Collection<Meter> $overdueSharedMeters
+ * @property-read UserRole $role
  */
 class User extends Authenticatable implements FilamentUser, HasTenants
 {

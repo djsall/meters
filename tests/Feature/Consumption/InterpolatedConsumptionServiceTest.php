@@ -2,7 +2,7 @@
 
 use App\Models\Meter;
 use App\Models\Reading;
-use App\Services\InterpolatedConsumptionService;
+use App\Services\Consumption\InterpolatedConsumptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 
@@ -13,18 +13,14 @@ beforeEach(function () {
     $this->service = new InterpolatedConsumptionService($this->meter);
 });
 
-it('calculates exact interpolation between two readings', function () {
-    // Setup: Reading of 100 on Jan 1st, 200 on Jan 11th (10 units per day)
-    $readings = collect([
-        new Reading(['date' => Carbon::parse('2025-01-01'), 'value' => 100]),
-        new Reading(['date' => Carbon::parse('2025-01-11'), 'value' => 200]),
-    ]);
+it('spreads consumption evenly between two readings', function () {
+    // 100 units over 10 days (10 per day)
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01'), 'value' => 100]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-11'), 'value' => 200]);
 
-    // Test: What was the reading on Jan 6th? (Halfway point)
-    $target = Carbon::parse('2025-01-06');
-    $result = $this->service->interpolate($readings, $target);
+    $total = $this->service->getTotalConsumption(Carbon::parse('2025-01-03'), Carbon::parse('2025-01-08'));
 
-    expect($result)->toBe(150.0);
+    expect($total)->toEqualWithDelta(50, 0.001);
 });
 
 it('calculates average daily consumption correctly', function () {
@@ -56,21 +52,14 @@ it('calculates average daily consumption correctly', function () {
     expect($avg)->toEqualWithDelta(10, 0.1);
 });
 
-it('handles edge cases in interpolation', function ($targetDate, $expectedValue) {
-    $readings = collect([
-        new Reading(['date' => Carbon::parse('2025-01-10'), 'value' => 500]),
-        new Reading(['date' => Carbon::parse('2025-01-20'), 'value' => 1000]),
-    ]);
+it('returns null for periods without reading coverage', function () {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-02-01'), 'value' => 500]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-01'), 'value' => 780]);
 
-    $result = $this->service->interpolate($readings, Carbon::parse($targetDate));
+    $monthly = $this->service->getMonthlyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-04-30'));
 
-    expect($result)->toBe($expectedValue);
-})->with([
-    'date before first reading' => ['2025-01-01', null],
-    'date exactly on a reading' => ['2025-01-10', 500.0],
-    'date after last reading' => ['2025-01-25', 1000.0],
-    'mid-point calculation' => ['2025-01-15', 750.0],
-]);
+    expect($monthly->pluck('consumption')->all())->toBe([null, 280.0, null, null]);
+});
 
 it('ensures the sum of daily consumption equals the total delta', function () {
     // Jan 1st: 1000
@@ -126,3 +115,26 @@ it('calculates total consumption accurately for months of different lengths', fu
     'July (31 days) @ 10/day' => ['2025-07-01', '2025-08-01', 10, 310.0],
     'Full Year @ 10/day' => ['2025-01-01', '2026-01-01', 10, 3650.0],
 ]);
+
+it('uses only the first reading of a day', function () {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 08:00'), 'value' => 100]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 20:00'), 'value' => 104]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-11 09:00'), 'value' => 200]);
+
+    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-10'));
+
+    expect($daily->pluck('consumption')->take(10)->unique()->all())->toBe([10.0]);
+});
+
+it('counts whole days regardless of the time of reading or DST', function () {
+    // Mar 30 2025 is only 23 hours long in Europe/Budapest
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-29 21:00'), 'value' => 100]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-31 07:00'), 'value' => 120]);
+
+    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-03-01'), Carbon::parse('2025-03-30'))
+        ->keyBy(fn (array $row): string => $row['day']->toDateString());
+
+    expect($daily['2025-03-29']['consumption'])->toBe(10.0)
+        ->and($daily['2025-03-30']['consumption'])->toBe(10.0)
+        ->and($this->service->getAverageDailyConsumption(Carbon::parse('2025-03-29'), Carbon::parse('2025-03-31')))->toBe(10.0);
+});

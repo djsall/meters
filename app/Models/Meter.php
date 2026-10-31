@@ -3,10 +3,8 @@
 namespace App\Models;
 
 use App\Enums\MeterType;
-use App\Observers\MeterObserver;
 use Carbon\CarbonInterface;
 use Filament\Facades\Filament;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
 
 /**
@@ -23,9 +22,7 @@ use Staudenmeir\EloquentJsonRelations\HasJsonRelationships;
  * @property-read ?Meter $previousMeter
  * @property-read ?Meter $successor
  * @property ?CarbonInterface $installed_at
- * @property float $retired_total_consumption
  */
-#[ObservedBy(MeterObserver::class)]
 class Meter extends Model
 {
     use HasFactory, HasJsonRelationships, HasUuids;
@@ -52,7 +49,6 @@ class Meter extends Model
             'settings' => 'array',
             'shared_users' => 'json',
             'installed_at' => 'date',
-            'retired_total_consumption' => 'float',
         ];
     }
 
@@ -76,17 +72,29 @@ class Meter extends Model
         return $this->hasOne(Meter::class, 'previous_meter_id');
     }
 
-    public function refreshRetiredTotalConsumption(): void
+    public function hasReadingOn(CarbonInterface|string $date): bool
     {
-        /** @var ?Reading $first */
-        $first = $this->readings()->oldest('date')->first();
-        /** @var ?Reading $last */
-        $last = $this->readings()->latest('date')->first();
+        return $this->readings()->whereDate('date', Carbon::parse($date))->exists();
+    }
 
-        $ownConsumption = ($first && $last) ? $last->value - $first->value : 0.0;
+    /**
+     * Records the value the meter showed when it was installed as a replacement,
+     * so consumption is known from the swap day on rather than only from its first reading.
+     */
+    public function recordOpeningReading(?float $value): void
+    {
+        if ($value === null || $this->previous_meter_id === null || $this->installed_at === null) {
+            return;
+        }
 
-        $this->retired_total_consumption = $ownConsumption + ($this->previousMeter?->retired_total_consumption);
-        $this->saveQuietly();
+        if ($this->hasReadingOn($this->installed_at)) {
+            return;
+        }
+
+        $this->readings()->create([
+            'value' => $value,
+            'date' => $this->installed_at->copy()->startOfDay(),
+        ]);
     }
 
     public static function getFilamentTenant(): ?Meter

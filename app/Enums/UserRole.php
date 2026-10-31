@@ -3,14 +3,13 @@
 namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
-use Illuminate\Contracts\Support\Htmlable;
 
 enum UserRole: string implements HasLabel
 {
     case Admin = 'admin';
     case User = 'user';
 
-    public function getLabel(): string|Htmlable|null
+    public function getLabel(): string
     {
         return match ($this) {
             UserRole::Admin => __('user.admin'),

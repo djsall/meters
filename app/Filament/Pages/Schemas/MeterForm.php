@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class MeterForm
@@ -31,6 +32,7 @@ class MeterForm
                     ->label(__('meter.description')),
                 Forms\Components\DatePicker::make('installed_at')
                     ->label(__('meter.installed_at'))
+                    ->live()
                     ->default(today()),
                 Select::make('previous_meter_id')
                     ->label(__('meter.previous_meter'))
@@ -51,7 +53,17 @@ class MeterForm
                             )
                             ->pluck('name', 'id');
                     })
+                    ->live()
                     ->searchable(),
+                Forms\Components\TextInput::make('opening_value')
+                    ->label(__('meter.opening_value'))
+                    ->helperText(__('meter.opening_value_help'))
+                    ->numeric()
+                    ->default(0)
+                    ->required()
+                    ->visible(static fn (Get $get, ?Model $record): bool => filled($get('previous_meter_id'))
+                        && filled($get('installed_at'))
+                        && ! ($record instanceof Meter && $record->hasReadingOn($get('installed_at')))),
                 Select::make('shared_users')
                     ->label(__('meter.shared_with'))
                     ->options(static function (): Collection {

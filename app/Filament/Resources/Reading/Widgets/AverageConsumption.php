@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Reading\Widgets;
 
 use App\Models\Meter;
-use App\Services\InterpolatedConsumptionService;
+use App\Services\Consumption\InterpolatedConsumptionService;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;

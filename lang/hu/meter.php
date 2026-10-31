@@ -12,6 +12,8 @@ return [
     'installed_at' => 'Beszerelés dátuma',
     'previous_meter' => 'Előző mérő',
     'previous_meter_help' => 'Kapcsold össze a lecserélt mérővel, hogy a fogyasztás a csere után is folytonos maradjon.',
+    'opening_value' => 'Kezdő óraállás',
+    'opening_value_help' => 'A mérő óraállása a beszereléskor. Ez lesz az első leolvasása.',
     'edit' => [
         'actions' => [
             'cancel' => 'Mégse',

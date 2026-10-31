@@ -33,7 +33,7 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Filament::auth()->user()->role === 'admin';
+        return Filament::auth()->user()->role->isAdmin();
     }
 
     public static function form(Schema $schema): Schema

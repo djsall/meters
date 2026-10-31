@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\UserRole;
+use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -44,6 +46,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'role' => UserRole::class,
             'last_notified' => 'datetime',
         ];
     }
@@ -86,6 +89,11 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->meters()->whereDoesntHave('successor')->get()->merge($this->sharedMeters);
+        $isAdmin = Filament::auth()->user()->role->isAdmin();
+
+        return $this->meters()
+            ->when(! $isAdmin, static fn (Builder $query): Builder => $query->whereDoesntHave('successor'))
+            ->get()
+            ->merge($this->sharedMeters);
     }
 }

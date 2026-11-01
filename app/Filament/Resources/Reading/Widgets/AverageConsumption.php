@@ -43,14 +43,14 @@ class AverageConsumption extends BaseWidget
                 'current_month',
                 'monthly.current',
                 today()->startOfMonth(),
-                today(),
+                today()->addDay(),
                 'primary'
             ),
             $this->monthlyAverageStat(
                 'current_year',
                 'yearly.current',
                 today()->startOfYear(),
-                today(),
+                today()->addDay(),
                 'primary'
             ),
             $this->dailyAverageStat(

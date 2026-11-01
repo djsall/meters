@@ -10,13 +10,15 @@ use Carbon\CarbonInterface;
  * assumed to be spread evenly over the days in between.
  *
  * Resolution is whole calendar days: a reading counts as the meter's value at
- * the start of its day, regardless of the time it was taken or DST changes.
+ * the end of its day, whatever time it was taken. The interval therefore covers
+ * the days after the first reading's day, through the second reading's day.
+ * Day ranges passed to this class work the same way: after one day, through another.
  */
 readonly class ConsumptionInterval
 {
     public function __construct(
-        public int $fromDay,
-        public int $toDay,
+        public int $fromReadingDay,
+        public int $toReadingDay,
         public float $amount,
     ) {}
 
@@ -31,30 +33,42 @@ readonly class ConsumptionInterval
         return (int) $epoch->diffInDays(CarbonImmutable::createMidnightDate($date->year, $date->month, $date->day, 'UTC'));
     }
 
+    /**
+     * The last day fully over at the given midnight: October starts when
+     * Sep 30 is over and ends when Oct 31 is.
+     */
+    public static function dayCompletedAt(CarbonInterface $midnight): int
+    {
+        return self::dayOf($midnight->copy()->subDay());
+    }
+
     public function days(): int
     {
-        return $this->toDay - $this->fromDay;
+        return $this->toReadingDay - $this->fromReadingDay;
     }
 
     /**
-     * Days of this interval that fall within [$startDay, $endDay).
+     * Days of this interval that fall after $afterDay, through $throughDay.
      */
-    public function overlapDays(int $startDay, int $endDay): int
+    public function overlapDays(int $afterDay, int $throughDay): int
     {
-        return max(0, min($this->toDay, $endDay) - max($this->fromDay, $startDay));
+        return max(0, min($this->toReadingDay, $throughDay) - max($this->fromReadingDay, $afterDay));
     }
 
     /**
-     * The share of this interval's consumption that falls within [$startDay, $endDay).
+     * The share of this interval's consumption that falls after $afterDay, through $throughDay.
      */
-    public function amountWithin(int $startDay, int $endDay): float
+    public function amountWithin(int $afterDay, int $throughDay): float
     {
-        return $this->amount * $this->overlapDays($startDay, $endDay) / $this->days();
+        return $this->amount * $this->overlapDays($afterDay, $throughDay) / $this->days();
     }
 
-    public function hasEndpointWithin(int $startDay, int $endDay): bool
+    /**
+     * Whether either reading bounding this interval was taken after $afterDay, through $throughDay.
+     */
+    public function hasReadingWithin(int $afterDay, int $throughDay): bool
     {
-        return ($this->fromDay >= $startDay && $this->fromDay < $endDay)
-            || ($this->toDay >= $startDay && $this->toDay < $endDay);
+        return ($this->fromReadingDay > $afterDay && $this->fromReadingDay <= $throughDay)
+            || ($this->toReadingDay > $afterDay && $this->toReadingDay <= $throughDay);
     }
 }

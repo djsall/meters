@@ -40,7 +40,7 @@ readonly class ConsumptionIntervals
                 ->merge($intervals);
         }
 
-        return $intervals->sortBy(fn (ConsumptionInterval $interval): int => $interval->fromDay)->values();
+        return $intervals->sortBy(fn (ConsumptionInterval $interval): int => $interval->fromReadingDay)->values();
     }
 
     /**
@@ -61,10 +61,12 @@ readonly class ConsumptionIntervals
             ->when($from, fn ($query) => $query->where('date', '>=', $from->copy()->startOfDay()))
             ->when($until, fn ($query) => $query->where('date', '<', $until->copy()->startOfDay()->addDay()));
 
+        $next = $query()->where('date', '>', $end)->oldest('date')->first();
+
         return collect([
             $query()->where('date', '<', $start)->latest('date')->first(),
             ...$query()->whereBetween('date', [$start, $end])->oldest('date')->get(),
-            $query()->where('date', '>', $end)->oldest('date')->first(),
+            ...($next === null ? [] : $query()->whereDate('date', $next->date)->oldest('date')->get()),
         ])->filter()->values();
     }
 
@@ -79,7 +81,7 @@ readonly class ConsumptionIntervals
     }
 
     /**
-     * Only the first reading of each day is used, as intervals have a resolution of one day.
+     * A reading counts as the value at the end of its day, so the last reading of each day is used.
      *
      * @param  Collection<int, Reading>  $readings  ordered by date
      * @return Collection<int, ConsumptionInterval>
@@ -87,7 +89,7 @@ readonly class ConsumptionIntervals
     private function toIntervals(Collection $readings): Collection
     {
         return $readings
-            ->unique(fn (Reading $reading): int => ConsumptionInterval::dayOf($reading->date))
+            ->keyBy(fn (Reading $reading): int => ConsumptionInterval::dayOf($reading->date))
             ->values()
             ->sliding(2)
             ->map(fn (Collection $pair): ConsumptionInterval => new ConsumptionInterval(

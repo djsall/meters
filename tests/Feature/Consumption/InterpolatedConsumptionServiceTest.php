@@ -53,8 +53,8 @@ it('calculates average daily consumption correctly', function () {
 });
 
 it('returns null for periods without reading coverage', function () {
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-02-01'), 'value' => 500]);
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-01'), 'value' => 780]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-31'), 'value' => 500]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-02-28'), 'value' => 780]);
 
     $monthly = $this->service->getMonthlyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-04-30'));
 
@@ -63,17 +63,18 @@ it('returns null for periods without reading coverage', function () {
 
 it('ensures the sum of daily consumption equals the total delta', function () {
     // Jan 1st: 1000
-    // Jan 31st: 1310 (310 units over 30 days of growth)
+    // Jan 31st: 1300 (300 units over the 30 days from Jan 2nd to Jan 31st)
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01'), 'value' => 1000]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-31'), 'value' => 1300]);
 
     $start = Carbon::parse('2025-01-01');
-    $end = Carbon::parse('2025-01-30'); // The range we want to sum
+    $end = Carbon::parse('2025-01-31'); // The range we want to sum
 
     $daily = $this->service->getDailyConsumption($start, $end);
     $totalSum = $daily->sum('consumption');
 
     // Total delta is 300. If your service reports 310 or 290, you have a boundary error.
+    // Jan 1st has no value, as nothing is known about the time before its reading.
     expect($totalSum)->toBe(300.0);
 });
 
@@ -85,10 +86,10 @@ it('correctly attributes consumption on the exact day of a reading', function ()
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-02 00:00:00'), 'value' => 110]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-03 00:00:00'), 'value' => 130]);
 
-    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-02'));
+    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-03'));
 
-    // Jan 1 consumption should be (Value at Jan 2 00:00) - (Value at Jan 1 00:00) = 10
-    expect($daily->firstWhere('day', Carbon::parse('2025-01-01'))['consumption'])->toBe(10.0);
+    // A reading closes its day: Jan 2 consumption is (Value on Jan 2) - (Value on Jan 1) = 10
+    expect($daily->pluck('consumption')->all())->toBe([null, 10.0, 20.0]);
 });
 
 it('calculates total consumption accurately for months of different lengths', function ($start, $end, $dailyRate, $expectedTotal) {
@@ -107,7 +108,8 @@ it('calculates total consumption accurately for months of different lengths', fu
         'value' => 1000 + ($days * $dailyRate),
     ]);
 
-    $total = $this->service->getTotalConsumption(Carbon::parse($start), Carbon::parse($end));
+    // Readings close their day, so the range runs from the day after the first to the day after the last
+    $total = $this->service->getTotalConsumption(Carbon::parse($start)->addDay(), Carbon::parse($end)->addDay());
 
     expect($total)->toBe((float) $expectedTotal);
 })->with([
@@ -116,33 +118,44 @@ it('calculates total consumption accurately for months of different lengths', fu
     'Full Year @ 10/day' => ['2025-01-01', '2026-01-01', 10, 3650.0],
 ]);
 
-it('uses only the first reading of a day', function () {
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 08:00'), 'value' => 100]);
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 20:00'), 'value' => 104]);
+it('uses only the last reading of a day', function () {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 08:00'), 'value' => 96]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 20:00'), 'value' => 100]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-11 09:00'), 'value' => 200]);
 
-    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-10'));
+    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-11'));
 
-    expect($daily->pluck('consumption')->take(10)->unique()->all())->toBe([10.0]);
+    expect($daily->first()['consumption'])->toBeNull()
+        ->and($daily->skip(1)->pluck('consumption')->unique()->all())->toBe([10.0]);
+});
+
+it('uses the last reading of the following day when a range ends before it', function () {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01 08:00'), 'value' => 0]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-11 08:00'), 'value' => 96]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-11 20:00'), 'value' => 100]);
+
+    $total = $this->service->getTotalConsumption(Carbon::parse('2025-01-02'), Carbon::parse('2025-01-07'));
+
+    expect($total)->toEqualWithDelta(50, 0.001);
 });
 
 it('counts whole days regardless of the time of reading or DST', function () {
     // Mar 30 2025 is only 23 hours long in Europe/Budapest
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-29 21:00'), 'value' => 100]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-29 09:00'), 'value' => 100]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-03-31 07:00'), 'value' => 120]);
 
-    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-03-01'), Carbon::parse('2025-03-30'))
+    $daily = $this->service->getDailyConsumption(Carbon::parse('2025-03-01'), Carbon::parse('2025-03-31'))
         ->keyBy(fn (array $row): string => $row['day']->toDateString());
 
-    expect($daily['2025-03-29']['consumption'])->toBe(10.0)
-        ->and($daily['2025-03-30']['consumption'])->toBe(10.0)
-        ->and($this->service->getAverageDailyConsumption(Carbon::parse('2025-03-29'), Carbon::parse('2025-03-31')))->toBe(10.0);
+    expect($daily['2025-03-30']['consumption'])->toBe(10.0)
+        ->and($daily['2025-03-31']['consumption'])->toBe(10.0)
+        ->and($this->service->getAverageDailyConsumption(Carbon::parse('2025-03-30'), Carbon::parse('2025-04-01')))->toBe(10.0);
 });
 
 it('averages monthly consumption over the covered months only', function () {
-    // 10/day from Jan 1 until Sep 1, after which the meter was retired
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01'), 'value' => 0]);
-    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-09-01'), 'value' => 2430]);
+    // 10/day for all of January to August, after which the meter was retired
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2024-12-31'), 'value' => 0]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-08-31'), 'value' => 2430]);
 
     $average = $this->service->getAverageMonthlyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-11-01'));
 
@@ -150,7 +163,7 @@ it('averages monthly consumption over the covered months only', function () {
 });
 
 it('counts partially covered months by the share of days covered', function () {
-    // 10/day for the first 15 days of January
+    // 10/day for 15 days of January
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-01'), 'value' => 0]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-16'), 'value' => 150]);
 
@@ -166,6 +179,28 @@ it('rounds daily consumption to two and monthly consumption to one decimal', fun
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-01-04'), 'value' => 1]);
     Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-02-04'), 'value' => 2]);
 
-    expect($this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-01'))->first()['consumption'])->toBe(0.33)
+    expect($this->service->getDailyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-02'))->last()['consumption'])->toBe(0.33)
         ->and($this->service->getMonthlyConsumption(Carbon::parse('2025-01-01'), Carbon::parse('2025-01-31'))->first()['consumption'])->toBe(1.9);
+});
+
+it('covers the day of a reading whatever time it was taken', function (string $time) {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse("2025-09-30 {$time}"), 'value' => 0]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse("2025-10-31 {$time}"), 'value' => 310]);
+
+    $start = Carbon::parse('2025-10-01');
+    $daily = $this->service->getDailyConsumption($start, $start->copy()->endOfMonth());
+
+    expect($daily)->toHaveCount(31)
+        ->and($daily->pluck('consumption')->unique()->all())->toBe([10.0])
+        ->and($this->service->getAverageDailyConsumption($start, Carbon::parse('2025-11-01')))->toBe(10.0);
+})->with(['00:00', '06:00', '11:59', '12:00', '21:00']);
+
+it('flags a month as measured when its only reading is on the last day', function () {
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-09-30'), 'value' => 0]);
+    Reading::factory()->create(['meter_id' => $this->meter->id, 'date' => Carbon::parse('2025-10-31'), 'value' => 310]);
+
+    $october = $this->service->getMonthlyConsumption(Carbon::parse('2025-10-01'), Carbon::parse('2025-10-31'))->first();
+
+    expect($october['consumption'])->toBe(310.0)
+        ->and($october['is_estimated'])->toBeFalse();
 });

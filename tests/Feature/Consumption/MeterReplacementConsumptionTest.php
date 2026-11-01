@@ -24,20 +24,20 @@ function monthly(Meter $meter, string $year = '2025'): array
 }
 
 beforeEach(function () {
-    // Old meter: 10 units/day from Jan 1 until the swap on Mar 1
+    // Old meter: 10 units/day through January and February, swapped on Feb 28
     $this->old = Meter::factory()->create();
-    reading($this->old, '2025-01-01', 1000);
-    reading($this->old, '2025-03-01', 1590);
+    reading($this->old, '2024-12-31', 1000);
+    reading($this->old, '2025-02-28', 1590);
 
     $this->new = Meter::factory()->create([
         'previous_meter_id' => $this->old->id,
-        'installed_at' => '2025-03-01',
+        'installed_at' => '2025-02-28',
     ]);
 });
 
 it('continues the consumption across a meter swap with an opening reading', function () {
-    reading($this->new, '2025-03-01', 0);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-02-28', 0);
+    reading($this->new, '2025-03-31', 310);
 
     $months = monthly($this->new);
 
@@ -49,8 +49,8 @@ it('continues the consumption across a meter swap with an opening reading', func
 });
 
 it('leaves the gap unknown when the new meter has no opening reading', function () {
-    reading($this->new, '2025-03-11', 100);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-03-10', 100);
+    reading($this->new, '2025-03-31', 310);
 
     $months = monthly($this->new);
 
@@ -61,8 +61,8 @@ it('leaves the gap unknown when the new meter has no opening reading', function 
 
 it('ignores readings of the old meter after the swap', function () {
     reading($this->old, '2025-05-01', 9999);
-    reading($this->new, '2025-03-01', 0);
-    reading($this->new, '2025-06-01', 920);
+    reading($this->new, '2025-02-28', 0);
+    reading($this->new, '2025-05-31', 920);
 
     $months = monthly($this->new);
 
@@ -72,15 +72,15 @@ it('ignores readings of the old meter after the swap', function () {
 
 it('ignores readings of the new meter before its installation', function () {
     reading($this->new, '2025-02-01', 50000);
-    reading($this->new, '2025-03-01', 0);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-02-28', 0);
+    reading($this->new, '2025-03-31', 310);
 
     expect(monthly($this->new)['02']['consumption'])->toBe(280.0);
 });
 
 it('calculates totals and averages across the swap', function () {
-    reading($this->new, '2025-03-11', 100);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-03-10', 100);
+    reading($this->new, '2025-03-31', 310);
 
     $service = new InterpolatedConsumptionService($this->new);
 
@@ -90,8 +90,8 @@ it('calculates totals and averages across the swap', function () {
 });
 
 it('does not use the predecessor for ranges after the swap', function () {
-    reading($this->new, '2025-03-01', 0);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-02-28', 0);
+    reading($this->new, '2025-03-31', 310);
 
     $total = (new InterpolatedConsumptionService($this->new))
         ->getTotalConsumption(Carbon::parse('2025-03-05'), Carbon::parse('2025-03-15'));
@@ -114,7 +114,7 @@ it('handles the old -> new swap without a negative month', function () {
     // Without an opening reading only Sep 19 onwards is known on the new meter
     expect($months['09']['consumption'])->toBe(3.1)
         ->and($months['09']['is_estimated'])->toBeTrue()
-        ->and($months['10']['consumption'])->toBe(7.7)
+        ->and($months['10']['consumption'])->toBe(8.0)
         ->and($months['11']['consumption'])->toBeNull();
 
     reading($new, '2025-09-01', 0);
@@ -123,8 +123,8 @@ it('handles the old -> new swap without a negative month', function () {
 });
 
 it('includes the predecessor readings when readings are scoped to the tenant meter', function () {
-    reading($this->new, '2025-03-01', 0);
-    reading($this->new, '2025-04-01', 310);
+    reading($this->new, '2025-02-28', 0);
+    reading($this->new, '2025-03-31', 310);
 
     // Mimic the global scope Filament registers on Reading inside the tenant-aware panel
     Reading::addGlobalScope(

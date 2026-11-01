@@ -56,18 +56,18 @@ readonly class InterpolatedConsumptionService
         }
 
         $intervals = $this->intervals->between($periods->first(), $nextPeriodStart($periods->last()));
-        $today = ConsumptionInterval::dayOf(today());
+        $lastCompletedDay = ConsumptionInterval::dayCompletedAt(today());
 
-        return $periods->map(function (CarbonInterface $periodStart) use ($periodKey, $intervals, $nextPeriodStart, $today, $precision): array {
-            $startDay = ConsumptionInterval::dayOf($periodStart);
-            $endDay = ConsumptionInterval::dayOf($nextPeriodStart($periodStart));
-            $consumption = $this->consumptionWithin($intervals, $startDay, $endDay);
+        return $periods->map(function (CarbonInterface $periodStart) use ($periodKey, $intervals, $nextPeriodStart, $lastCompletedDay, $precision): array {
+            $afterDay = ConsumptionInterval::dayCompletedAt($periodStart);
+            $throughDay = ConsumptionInterval::dayCompletedAt($nextPeriodStart($periodStart));
+            $consumption = $this->consumptionWithin($intervals, $afterDay, $throughDay);
 
             // Only the elapsed days of a period need to be covered for it to count as measured.
-            $elapsedEndDay = min($endDay, $today);
-            $isFullyCovered = $this->coveredDays($intervals, $startDay, $elapsedEndDay) >= max(0, $elapsedEndDay - $startDay);
+            $elapsedThroughDay = min($throughDay, $lastCompletedDay);
+            $isFullyCovered = $this->coveredDays($intervals, $afterDay, $elapsedThroughDay) >= max(0, $elapsedThroughDay - $afterDay);
             $hasReading = $intervals->contains(
-                fn (ConsumptionInterval $interval): bool => $interval->hasEndpointWithin($startDay, $endDay)
+                fn (ConsumptionInterval $interval): bool => $interval->hasReadingWithin($afterDay, $throughDay)
             );
 
             return [
@@ -85,15 +85,15 @@ readonly class InterpolatedConsumptionService
     public function getAverageDailyConsumption(CarbonInterface $startDate, CarbonInterface $endDate): ?float
     {
         $intervals = $this->intervals->between($startDate, $endDate);
-        $startDay = ConsumptionInterval::dayOf($startDate);
-        $endDay = ConsumptionInterval::dayOf($endDate);
-        $coveredDays = $this->coveredDays($intervals, $startDay, $endDay);
+        $afterDay = ConsumptionInterval::dayCompletedAt($startDate);
+        $throughDay = ConsumptionInterval::dayCompletedAt($endDate);
+        $coveredDays = $this->coveredDays($intervals, $afterDay, $throughDay);
 
         if ($coveredDays < 1) {
             return null;
         }
 
-        return $this->consumptionWithin($intervals, $startDay, $endDay) / $coveredDays;
+        return $this->consumptionWithin($intervals, $afterDay, $throughDay) / $coveredDays;
     }
 
     /**
@@ -104,14 +104,14 @@ readonly class InterpolatedConsumptionService
     public function getAverageMonthlyConsumption(CarbonInterface $startDate, CarbonInterface $endDate): ?float
     {
         $intervals = $this->intervals->between($startDate, $endDate);
-        $startDay = ConsumptionInterval::dayOf($startDate);
-        $endDay = ConsumptionInterval::dayOf($endDate);
+        $afterDay = ConsumptionInterval::dayCompletedAt($startDate);
+        $throughDay = ConsumptionInterval::dayCompletedAt($endDate);
 
-        $coveredMonths = $this->monthsOf($startDate, $endDate)->sum(function (CarbonInterface $monthStart) use ($intervals, $startDay, $endDay): float {
+        $coveredMonths = $this->monthsOf($startDate, $endDate)->sum(function (CarbonInterface $monthStart) use ($intervals, $afterDay, $throughDay): float {
             $coveredDays = $this->coveredDays(
                 $intervals,
-                max(ConsumptionInterval::dayOf($monthStart), $startDay),
-                min(ConsumptionInterval::dayOf($monthStart->copy()->addMonthNoOverflow()), $endDay),
+                max(ConsumptionInterval::dayCompletedAt($monthStart), $afterDay),
+                min(ConsumptionInterval::dayCompletedAt($monthStart->copy()->addMonthNoOverflow()), $throughDay),
             );
 
             return $coveredDays / $monthStart->daysInMonth;
@@ -121,7 +121,7 @@ readonly class InterpolatedConsumptionService
             return null;
         }
 
-        return $this->consumptionWithin($intervals, $startDay, $endDay) / $coveredMonths;
+        return $this->consumptionWithin($intervals, $afterDay, $throughDay) / $coveredMonths;
     }
 
     /**
@@ -132,29 +132,29 @@ readonly class InterpolatedConsumptionService
     {
         return $this->consumptionWithin(
             $this->intervals->between($start, $end),
-            ConsumptionInterval::dayOf($start),
-            ConsumptionInterval::dayOf($end),
+            ConsumptionInterval::dayCompletedAt($start),
+            ConsumptionInterval::dayCompletedAt($end),
         );
     }
 
     /**
      * @param  Collection<int, ConsumptionInterval>  $intervals
      */
-    private function consumptionWithin(Collection $intervals, int $startDay, int $endDay): ?float
+    private function consumptionWithin(Collection $intervals, int $afterDay, int $throughDay): ?float
     {
-        if ($this->coveredDays($intervals, $startDay, $endDay) === 0) {
+        if ($this->coveredDays($intervals, $afterDay, $throughDay) === 0) {
             return null;
         }
 
-        return $intervals->sum(fn (ConsumptionInterval $interval): float => $interval->amountWithin($startDay, $endDay));
+        return $intervals->sum(fn (ConsumptionInterval $interval): float => $interval->amountWithin($afterDay, $throughDay));
     }
 
     /**
      * @param  Collection<int, ConsumptionInterval>  $intervals
      */
-    private function coveredDays(Collection $intervals, int $startDay, int $endDay): int
+    private function coveredDays(Collection $intervals, int $afterDay, int $throughDay): int
     {
-        return $intervals->sum(fn (ConsumptionInterval $interval): int => $interval->overlapDays($startDay, $endDay));
+        return $intervals->sum(fn (ConsumptionInterval $interval): int => $interval->overlapDays($afterDay, $throughDay));
     }
 
     /**

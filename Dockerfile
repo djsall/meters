@@ -1,25 +1,15 @@
-FROM php:8.4-fpm
+FROM serversideup/php:8.4-fpm-nginx
 
-# Install system dependencies & PHP extensions
-RUN apt-get update && apt-get install -y \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype-dev \
-    zip \
-    libzip-dev \
-    unzip \
-    git \
-    libicu-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo_mysql gd zip intl bcmath opcache exif
+ENV PHP_OPCACHE_ENABLE=1
 
-# Copy composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Extensions not included in the base image
+USER root
+RUN install-php-extensions bcmath exif gd intl
+USER www-data
 
-WORKDIR /var/www/html
+# Install dependencies first so this layer is cached until composer.lock changes
+COPY --chown=www-data:www-data composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-scripts --no-autoloader --prefer-dist
 
-# Deployment script as entrypoint
-COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-ENTRYPOINT ["entrypoint.sh"]
+COPY --chown=www-data:www-data . .
+RUN composer dump-autoload --optimize --no-dev
